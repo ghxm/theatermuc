@@ -39,7 +39,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           # Upload site filder
-          path: './site'
+          path: '.'
           
   # Deployment job
   deploy:
