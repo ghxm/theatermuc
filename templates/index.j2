@@ -61,7 +61,7 @@
                                                             <td><a class="text-decoration-none fw-bold" target="_blank" href="{{ event.urls.info }}">{{ event.title }}</a></td>
                                                             <td>{%  if event.start_datetime != None %}{{ event.start_datetime.strftime('%H:%M') }} {% endif %}</td>
                                                             <td>{%  if event.end_datetime != None %}{{ event.end_datetime.strftime('%H:%M') }} {% endif %}</td>
-                                                            <td>{{ event.location }}</td>
+                                                            <td>{% if event.location != None %}{{ event.location }}{% endif %}</td>
                                                         </tr>
                                                     {% endfor %}
                                                     </tbody>
