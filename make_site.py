@@ -75,7 +75,7 @@ date_weekdays = {date: utils.get_weekday(date) for date in dates}
 def path_exists(path):
     return os.path.exists(path)
 
-tz = pytz.timezone(tz)
+tz = pytz.timezone('Europe/Berlin')
 
 
 # Write the rendered template to a file
