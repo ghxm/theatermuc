@@ -23,6 +23,10 @@ def get_events(month):
 
     event_days = program_bs.find_all('section', {'class': 'schedule__day'})
 
+    for day in event_days:
+        day['data-month-code'] = month
+
+
     return event_days
 
 
@@ -57,10 +61,12 @@ for day in event_days:
 
             month = re.findall(r'[A-Za-zä]{3,}', date)
 
+            year = re.search(r'[0-9]{4}', day['data-month-code'])
+
             if len(month) > 0:
                 month = month[0]
                 month_num = utils.german_month_to_num(month)
-                date = re.sub(r'\s*'+ month +'\s*', '.'+str(month_num)+'.', date) + str(utils.figure_out_year(int(month_num)))
+                date = re.sub(r'\s*'+ month +'\s*', '.'+str(month_num)+'.', date) + str(year.group(0))
             else:
                 raise Exception('No month found')
 
