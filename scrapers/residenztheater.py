@@ -1,7 +1,7 @@
 import utils
 import re
 
-resi_locations = ['Marstall', 'Residenztheater', 'Cuvilliéstheater']
+resi_locations = ['Marstall', 'Residenztheater', 'Cuvilliéstheater', 'Zur Schönen Aussicht']
 
 tz = 'Europe/Berlin'
 venue = 'Residenztheater'
@@ -54,7 +54,7 @@ for day in event_days:
         try:
             # check if any location is mentioned
             for location in resi_locations:
-                if location in info:
+                if location.lower() in info.lower():
                     break
                 else:
                     location = None
