@@ -29,8 +29,26 @@ body { overflow-x: hidden; }
   overflow: hidden;
 }
 
+.dot {
+  height: 5px;
+  width: 5px;
+  background-color: #bbb;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.green {
+  background-color: #4CAF50 !important;
+}
+
+.red {
+  background-color: #f44336 !important;
+}
+
 
 /* Tables */
+
+
 
 .row-date {
     margin-top: 2em;
@@ -68,4 +86,18 @@ body { overflow-x: hidden; }
 .table-events {
     width: 100% !important;
     border-collapse: collapse;
+
+}
+
+.table-fixed {
+    table-layout: fixed;
+}
+
+
+td.text span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: inline-block;
+    max-width: 100%;
 }

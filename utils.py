@@ -87,7 +87,11 @@ def german_month_to_num(month):
                 'November': 11,
                 'Dezember': 12}
 
-    return months[month]
+    # partial match / starts with
+    for key in months.keys():
+        if key.lower().startswith(month.lower()):
+            return months[key]
+
 
 def get_current_year():
     """
@@ -132,6 +136,10 @@ def run_all_scrapers(dir = 'scrapers/'):
     # get list of all files in dir
     scrapers = [d for d in os.listdir(dir) if d.endswith('.py') and not d.startswith('_')]
 
+    log = {
+        'success': [],
+        'errors': []}
+
     # loop over all scrapers
     for scraper in scrapers:
 
@@ -141,8 +149,15 @@ def run_all_scrapers(dir = 'scrapers/'):
 
                 # run scraper using exec
                 exec(open(path).read())
-            except:
+
+                # add scraper to success list
+                log['success'].append(scraper)
+            except Exception as e:
+                log['errors'].append({'scraper': scraper, 'error': str(e)})
                 print('Error in scraper: ' + scraper)
+                print(e)
+
+    return log
 
 
 

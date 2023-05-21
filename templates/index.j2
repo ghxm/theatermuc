@@ -46,10 +46,10 @@
 
                                                 <p class="h6 mb-3 fst-italic">{{ theater }}</p>
 
-                                                <table class="ms-2 table-events mb-3 table border rounded table-striped">
+                                                <table class="ms-2 mb-3 table-events table-fixed  table border rounded table-striped">
                                                     <thead>
                                                     <tr class="row-title text-reset">
-                                                        <th style="width:30%">Title</th>
+                                                        <th style="width:25%">Title</th>
                                                         <th style="width:10%">Begin</th>
                                                         <th style="width:10%">End</th>
                                                         <th style="width:20%">Location</th>
@@ -61,7 +61,7 @@
                                                             <td><a class="text-decoration-none fw-bold" target="_blank" href="{{ event.urls.info }}">{{ event.title }}</a></td>
                                                             <td>{%  if event.start_datetime != None %}{{ event.start_datetime.strftime('%H:%M') }} {% endif %}</td>
                                                             <td>{%  if event.end_datetime != None %}{{ event.end_datetime.strftime('%H:%M') }} {% endif %}</td>
-                                                            <td>{% if event.location != None %}{{ event.location }}{% endif %}</td>
+                                                            <td class="text text-break"><span>{% if event.location != None %}{{ event.location }}{% endif %}</span></td>
                                                         </tr>
                                                     {% endfor %}
                                                     </tbody>
@@ -86,7 +86,24 @@
             </div>
         {% endfor %}
 
+
+<div class="text-end">
+    <p>
+    last update: {{ now.strftime('%Y-%m-%d %H:%M') }}
+    </p>
+    <ul class = "list-unstyled">
+        {%  for scr in log.success %}
+            <li class=""><span class="dot green"></span> <code>{{ scr }}</code></li>
+        {% endfor %}
+        {%  for scr in log.errors %}
+            <li><span class="dot red"></span> <code>{{ scr.scraper }}</code></li>
+        {% endfor %}
+    </ul>
 </div>
+
+</div>
+
+
 
 </body>
 </html>

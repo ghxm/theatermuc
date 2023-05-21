@@ -11,11 +11,33 @@ current_year = utils.get_current_year()
 
 base_url = 'https://www.residenztheater.de'
 
+
+def get_events(month):
+
+    import utils
+    import re
+
+    program_html = utils.get_html(f'https://www.residenztheater.de/spielplan?month={month}')
+
+    program_bs = utils.make_soup(program_html)
+
+    event_days = program_bs.find_all('section', {'class': 'schedule__day'})
+
+    return event_days
+
+
+# get all month values
 program_html = utils.get_html('https://www.residenztheater.de/spielplan')
 
 program_bs = utils.make_soup(program_html)
 
-event_days = program_bs.find_all('section', {'class': 'schedule__day'})
+months = [o['value'] for o in program_bs.find(id='filter-date').find_all('option') if o['value'] != '']
+
+event_days = []
+
+for month in months:
+    event_days += get_events(month)
+
 
 schedule_events = []
 
@@ -33,7 +55,7 @@ for day in event_days:
             # remove weekday
             date = re.sub(r'^[A-Za-z]{2,3}\s', '', date)
 
-            month = re.findall(r'[A-Za-z]{3,}', date)
+            month = re.findall(r'[A-Za-zä]{3,}', date)
 
             if len(month) > 0:
                 month = month[0]
@@ -125,9 +147,12 @@ for day in event_days:
         except:
             pass
 
+        if date is None:
+            print('No date found for event: ' + title)
+            continue
 
         # add to schedule_events
-        schedule_events.append({'date': utils.ymd_string(date),
+        schedule_events.append({'date': utils.ymd_string(date) if date is not None else None,
                                 'year': utils.get_year(date),
                                 'kw': utils.get_weeknum(date),
                                 'venue': venue,
@@ -141,6 +166,9 @@ for day in event_days:
                                 'end_datetime': end_datetime.isoformat() if end_datetime is not None else None,
                                 'location': location,
                                 'description': description})
+
+
+
 
 
 # write to file

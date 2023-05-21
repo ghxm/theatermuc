@@ -11,10 +11,13 @@ schedules_dir = 'data/'
 schedule_filename = 'schedule.json'
 schedule_path = utils.path_to_data_folder(schedule_filename)
 
-try:
-    utils.run_all_scrapers()
-except:
-    print('Error running scrapers.')
+
+log = utils.run_all_scrapers()
+
+if len(log['errors']) > 0:
+    print('There were errors running the scrapers:')
+    print(log['errors'])
+
 
 utils.combine_schedules(schedules_dir, schedule_filename)
 
@@ -59,5 +62,5 @@ date_weekdays = {date: utils.get_weekday(date) for date in dates}
 
 # Write the rendered template to a file
 with open('site/index.html', 'w') as f:
-    f.write(template.render(site_title=site_title,schedule=schedule, date_weekdays=date_weekdays, today = utils.get_today(), today_datetime = utils.get_today(dt=True)))
+    f.write(template.render(site_title=site_title,schedule=schedule, date_weekdays=date_weekdays, today = utils.get_today(), today_datetime = utils.get_today(dt=True), now = datetime.now(), log = log))
 
