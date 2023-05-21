@@ -3,6 +3,7 @@ import utils
 import os
 import json
 from datetime import datetime
+import pytz
 
 site_title = 'Theater Munich'
 
@@ -74,8 +75,10 @@ date_weekdays = {date: utils.get_weekday(date) for date in dates}
 def path_exists(path):
     return os.path.exists(path)
 
+tz = pytz.timezone(tz)
+
 
 # Write the rendered template to a file
 with open('site/index.html', 'w') as f:
-    f.write(template.render(site_title=site_title,schedule=schedule, date_weekdays=date_weekdays, today = utils.get_today(), today_datetime = utils.get_today(dt=True), now = datetime.now(), log = log, path_exists = path_exists))
+    f.write(template.render(site_title=site_title,schedule=schedule, date_weekdays=date_weekdays, today = utils.get_today(), today_datetime = utils.get_today(dt=True), now = datetime.now(tz), log = log, path_exists = path_exists))
 
