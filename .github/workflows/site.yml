@@ -2,6 +2,8 @@
 name: Generate site and deploy content to Pages
 
 on:
+  schedule:
+    - cron: "0 */3 * * *"
   # Runs on pushes targeting the default branch
   push:
     branches: ["master"]
@@ -36,7 +38,7 @@ jobs:
           pip3 install -r requirements.txt
           python3 make_site.py
       - name: Upload artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-pages-artifact@v1
         with:
           # Upload site filder
           path: './site'
