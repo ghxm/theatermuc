@@ -1,11 +1,12 @@
 import requests
 from bs4 import BeautifulSoup
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 import pytz
 import os
 import itertools
 from collections import defaultdict
+from ics import Calendar, Event
 
 def get_html(url):
     """
@@ -31,7 +32,10 @@ def write_json(data, filename):
     Write data to json file.
     """
 
-    path = os.path.join(path_to_data_folder(), filename)
+    if '/' not in filename:
+        path = os.path.join(path_to_data_folder(), filename)
+    else:
+        path = filename
 
     with open(path, 'w') as f:
         json.dump(data, f)
@@ -269,3 +273,51 @@ def remove_past_events(schedule, date=get_today(dt=True)):
     schedule = [event for event in schedule if make_date(event['date'], 'Europe/Berlin') >= date if event['date'] != '' and event['date'] is not None]
 
     return schedule
+
+def convert_json_to_ics(schedule):
+
+    # create calendar
+    cal = Calendar()
+
+    # loop over all events
+    for event in schedule:
+
+        try:
+
+            # create event
+            ics_event = Event()
+
+            # set event properties
+            ics_event.name = event['title']
+            ics_event.begin = event['start_datetime']
+            ics_event.end = event['end_datetime'] if event['end_datetime'] is not None else datetime.fromisoformat(event['start_datetime']) + timedelta(hours=1)
+            ics_event.description = event['description'] if event['description'] is not None else ''
+
+            ics_event.description = ics_event.description + '\n\n' + 'Info: ' + event['urls']['info'] if event['urls'].get('info') is not None else ics_event.description
+
+            ics_event.description = ics_event.description + '\n\n' + 'Tickets: ' + event['urls']['ticket'] if event['urls'].get('ticket') is not None else ics_event.description
+
+            try:
+                ics_event.url = event['urls']['info']
+            except:
+                pass
+
+            ics_event.location = event['venue']
+            ics_event.location = ics_event.location + event['location'] if event['location'] is not None else ics_event.location
+
+            # add event to calendar
+            cal.events.add(ics_event)
+
+        except Exception as e:
+            print('Could not add event to calendar: ' + event['title'])
+
+    return cal
+
+def write_ics(schedule, filepath):
+
+    # convert schedule json to ics
+    ics = convert_json_to_ics(schedule)
+
+    # write ics file
+    with open(filepath, 'w') as f:
+        f.write(ics.serialize())

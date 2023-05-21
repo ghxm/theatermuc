@@ -33,6 +33,18 @@ schedule_str = open(schedule_path, 'r').read()
 
 schedule = json.loads(schedule_str)
 
+try:
+    utils.write_ics(schedule, 'site/static/schedule.ics')
+except Exception as e:
+    print('Error writing ics file:')
+    print(e)
+
+try:
+    utils.write_json(schedule, 'site/static/schedule.json')
+except Exception as e:
+    print('Error writing json file:')
+    print(e)
+
 schedule = utils.remove_past_events(schedule)
 
 
@@ -59,8 +71,11 @@ for year in schedule.keys():
 
 date_weekdays = {date: utils.get_weekday(date) for date in dates}
 
+def path_exists(path):
+    return os.path.exists(path)
+
 
 # Write the rendered template to a file
 with open('site/index.html', 'w') as f:
-    f.write(template.render(site_title=site_title,schedule=schedule, date_weekdays=date_weekdays, today = utils.get_today(), today_datetime = utils.get_today(dt=True), now = datetime.now(), log = log))
+    f.write(template.render(site_title=site_title,schedule=schedule, date_weekdays=date_weekdays, today = utils.get_today(), today_datetime = utils.get_today(dt=True), now = datetime.now(), log = log, path_exists = path_exists))
 
