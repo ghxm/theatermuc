@@ -32,7 +32,7 @@ event_days = []
 driver = utils.get_selenium_driver()
 
 # get all year-month values
-for year in range(current_year, current_year + 1):
+for year in range(current_year, current_year + 2):
     for month in range(current_month, 13):
 
         month = str(month).zfill(2)
