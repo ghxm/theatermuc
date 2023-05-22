@@ -12,8 +12,19 @@ schedules_dir = 'data/'
 schedule_filename = 'schedule.json'
 schedule_path = utils.path_to_data_folder(schedule_filename)
 
+# if there are no files in the data folder, run all scrapers
+if len([f for f in os.listdir(utils.path_to_data_folder()) if f.endswith('json')]) == 0:
 
-log = utils.run_all_scrapers()
+    log = utils.run_all_scrapers()
+
+    utils.write_json(log, 'site/static/log.json')
+
+else:
+    try:
+        log = json.load(open('site/static/log.json', 'r'))
+    except:
+        log = {'success': [], 'errors': [], 'dev': False}
+
 
 if len(log['errors']) > 0:
     print('There were errors running the scrapers:')
@@ -76,6 +87,7 @@ def path_exists(path):
     return os.path.exists(path)
 
 tz = pytz.timezone('Europe/Berlin')
+
 
 
 # Write the rendered template to a file

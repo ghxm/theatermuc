@@ -7,16 +7,49 @@ import os
 import itertools
 from collections import defaultdict
 from ics import Calendar, Event
+import undetected_chromedriver as uc
+from selenium import webdriver
 
 def get_html(url):
     """
     Get html from url.
     """
 
-    r = requests.get(url)
+    # add header
+    headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36'}
+
+    # allow cookies
+    s = requests.Session()
+
+    r = s.get(url, headers=headers)
     r.raise_for_status()
 
     return r.text
+
+
+def get_selenium_driver():
+    options = webdriver.ChromeOptions()
+    options.headless = True
+    options.add_argument("start-maximized")
+    #options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    #options.add_experimental_option('useAutomationExtension', False)
+    driver = uc.Chrome(options=options)
+
+    return driver
+
+def get_html_selenium(url, driver = None):
+    """
+    Get html from url using selenium.
+    """
+
+    if driver is None:
+        driver = get_selenium_driver()
+
+    driver.get(url)
+
+    html = driver.page_source
+
+    return html
 
 def make_soup(html):
     """
@@ -102,9 +135,19 @@ def get_current_year():
     Get current year.
     """
 
-    now = datetime.now()
+    tz = pytz.timezone('Europe/Berlin')
+
+    now = datetime.now(tz)
 
     return now.year
+
+def get_current_month():
+
+    tz = pytz.timezone('Europe/Berlin')
+
+    now = datetime.now(tz)
+
+    return now.month
 
 
 def figure_out_year(month):
@@ -142,7 +185,8 @@ def run_all_scrapers(dir = 'scrapers/'):
 
     log = {
         'success': [],
-        'errors': []}
+        'errors': [],
+        'dev': False}
 
     # loop over all scrapers
     for scraper in scrapers:

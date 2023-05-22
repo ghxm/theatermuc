@@ -11,9 +11,19 @@
 <body>
     <div id="top" class="">
     </div>
+
 <div class = "container-fluid">
 
     {% set cols = namespace(bg_days_sat=82) %}
+
+    {% if log.errors|length > 0 %}
+
+    <div class="row">
+            <code>WARNING: Could not get data from some theaters. Displayed may be old or unreliable. See <a href="#log">log</a>.</code>
+    </div>
+
+    {% endif %}
+
 
 
 
