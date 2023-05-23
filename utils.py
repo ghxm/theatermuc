@@ -196,7 +196,7 @@ def run_all_scrapers(dir = 'scrapers/'):
                 path = os.path.join(dir, scraper)
 
                 # run scraper using exec
-                exec(open(path).read())
+                exec(open(path).read(), globals(), globals())
 
                 # add scraper to success list
                 log['success'].append(scraper)
