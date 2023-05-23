@@ -144,7 +144,7 @@ for day in event_days:
         slug = None
         try:
             slug = event.find(class_='title').find(re.compile(r'h[0-9]')).find('a')['href']
-            slug = slug.replace('.', '', 1)
+            slug = slug.replace('./', 'de/', 1)
             urls_dict['info'] = base_url + slug
         except:
             pass
