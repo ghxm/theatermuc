@@ -2,7 +2,7 @@ import utils
 import re
 import random
 import time
-
+from datetime import datetime, timedelta
 
 tz = 'Europe/Berlin'
 venue = 'Freie Szene'
@@ -14,11 +14,11 @@ current_month = utils.get_current_month()
 base_url = 'https://www.freieszenemuc.de'
 
 
-def get_events(month):
+def get_events(date):
 
     import utils
 
-    program_ics = utils.get_html(f'https://www.freieszenemuc.de/?post_type=tribe_events&eventDisplay=month&eventDate={month}&paged=2&ical=1')
+    program_ics = utils.get_html(f'https://www.freieszenemuc.de/?post_type=tribe_events&tribe-bar-date={date}&ical=1&eventDisplay=list')
 
     cals = utils.parse_ics(program_ics)
 
@@ -36,6 +36,10 @@ def get_events(month):
 none_count = 0
 events = []
 
+# get today's date
+
+date_today = utils.get_today(dt=True)
+
 
 # get all year-month values
 for year in range(current_year, current_year + 2):
@@ -43,7 +47,10 @@ for year in range(current_year, current_year + 2):
 
         month = str(month).zfill(2)
 
-        events_month = get_events(f'{year}-{month}')
+        events_month = get_events(utils.ymd_string(date_today))
+
+        # add 25 days to date_today
+        date_today = date_today + timedelta(days=10)
 
 
         events.extend(events_month)
@@ -55,7 +62,7 @@ for year in range(current_year, current_year + 2):
         else:
             none_count = 0
 
-
+events = list({v.uid:v for v in events}.values())
 
 schedule_events = []
 
@@ -82,11 +89,7 @@ for event in events:
     except:
         date = None
 
-    # find title
-    try:
-        title = event.name
-    except:
-        title = None
+
 
     # find description
     try:
@@ -133,10 +136,18 @@ for event in events:
     try:
         location = event.location
 
-        re.sub(r',.*', '', location)
+        location = re.sub(r',.*', '', location)
 
     except:
         pass
+
+    # find title
+    try:
+        title = event.name
+
+        title = re.sub(location + r':\s*', '', title)
+    except:
+        title = None
 
     # add to schedule_events
     schedule_events.append({'date': utils.ymd_string(date) if date is not None else None,
@@ -156,7 +167,7 @@ for event in events:
 
 
 
-
+schedule_events = list(set(schedule_events))
 
 # write to file
 utils.write_json(schedule_events, 'freieszene_schedule.json')
