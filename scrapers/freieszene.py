@@ -84,6 +84,9 @@ for event in events:
     except:
         end_datetime = None
 
+    if end_datetime == start_datetime:
+        end_datetime = None
+
     try:
         date = event.begin.date()
     except:
