@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import pytz
 import os
 import itertools
@@ -209,7 +209,12 @@ def run_all_scrapers(dir = 'scrapers/'):
 
 
 
+def parse_ics(ics_string):
 
+    # parse ics string
+    c = Calendar.parse_multiple(ics_string)
+
+    return c
 
 
 def combine_schedules(schedule_dir, out_filename):
@@ -263,18 +268,23 @@ def aggregate_schedule(schedule, groups = []):
     return schedule_agg
 
 
-def ymd_string (date):
+def ymd_string (in_date):
 
     # try to parse date
-    try:
-        date = datetime.strptime(date, '%d.%m.%Y')
-    except ValueError:
-        date = datetime.strptime(date, '%Y-%m-%d')
+    if isinstance(in_date, str):
+        try:
+            in_date = datetime.strptime(in_date, '%d.%m.%Y')
+        except ValueError:
+            in_date = datetime.strptime(in_date, '%Y-%m-%d')
+    elif isinstance(in_date, (datetime, date)):
+        out_date = in_date
+    else:
+        raise ValueError('Date must be string or datetime object.')
 
     # convert to string
-    date = date.strftime('%Y-%m-%d')
+    out_date = out_date.strftime('%Y-%m-%d')
 
-    return date
+    return out_date
 
 def get_weekday(date):
 

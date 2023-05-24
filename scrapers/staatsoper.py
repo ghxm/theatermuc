@@ -44,7 +44,7 @@ for year in range(current_year, current_year + 2):
 
         event_days.extend(events_month)
 
-        if len(event_days) == 0:
+        if len(events_month) == 0:
             none_count += 1
         elif none_count > 3:
             break
