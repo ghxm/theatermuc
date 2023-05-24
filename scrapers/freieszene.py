@@ -159,4 +159,4 @@ for event in events:
 
 
 # write to file
-utils.write_json(schedule_events, 'freieszene.json')
+utils.write_json(schedule_events, 'freieszene_schedule.json')
