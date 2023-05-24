@@ -269,6 +269,7 @@ def aggregate_schedule(schedule, groups = []):
 
 
 def ymd_string (in_date):
+    from datetime import datetime, timedelta, date
 
     # try to parse date
     if isinstance(in_date, str):
