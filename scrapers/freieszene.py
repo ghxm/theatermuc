@@ -167,7 +167,5 @@ for event in events:
 
 
 
-schedule_events = list(set(schedule_events))
-
 # write to file
 utils.write_json(schedule_events, 'freieszene_schedule.json')
