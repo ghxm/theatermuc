@@ -273,9 +273,9 @@ def ymd_string (in_date):
     # try to parse date
     if isinstance(in_date, str):
         try:
-            in_date = datetime.strptime(in_date, '%d.%m.%Y')
+            out_date = datetime.strptime(in_date, '%d.%m.%Y')
         except ValueError:
-            in_date = datetime.strptime(in_date, '%Y-%m-%d')
+            out_date = datetime.strptime(in_date, '%Y-%m-%d')
     elif isinstance(in_date, (datetime, date)):
         out_date = in_date
     else:
