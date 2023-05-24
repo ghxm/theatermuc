@@ -145,7 +145,15 @@ for event in events:
     try:
         title = event.name
 
-        title = re.sub(location + r':\s*', '', title)
+        loc_match = re.search(location.lower() + r':\s*', title.lower())
+
+        if loc_match:
+
+            title = title[loc_match.end():]
+
+        if title.lower().startswith('hofspielhaus:'):
+            title = title[13:]
+
     except:
         title = None
 
