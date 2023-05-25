@@ -171,8 +171,8 @@ for event in events:
                             'urls': urls_dict,
                             'time': None,
                             'cost': None, # TODO: add cost
-                            'start_datetime': start_datetime.isoformat() if start_datetime is not None else None and not all_day,
-                            'end_datetime': end_datetime.isoformat() if end_datetime is not None else None and not all_day,
+                            'start_datetime': start_datetime.isoformat() if start_datetime is not None and not all_day else None ,
+                            'end_datetime': end_datetime.isoformat() if end_datetime is not None and not all_day else None ,
                             'location': location,
                             'description': description})
 
