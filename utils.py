@@ -349,7 +349,7 @@ def convert_json_to_ics(schedule):
 
             if event['end_datetime'] is not None and event['end_datetime'] < event['start_datetime']:
                 # adjust date to next day
-                ics_event.end = event['start_datetime'] + timedelta(days=1)
+                ics_event.end = datetime.fromisoformat(event['start_datetime']) + timedelta(days=1) if event['start_datetime'] is not None else None
             else:
 
                 ics_event.end = event['end_datetime'] if event['end_datetime'] is not None else datetime.fromisoformat(event['start_datetime']) + timedelta(hours=1) if event['start_datetime'] is not None else None
