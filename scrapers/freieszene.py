@@ -70,6 +70,8 @@ for event in events:
 
     if event.all_day:
         all_day = True
+    else:
+        all_day = False
 
     try:
         # make datetime
