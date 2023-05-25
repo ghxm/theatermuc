@@ -372,7 +372,7 @@ def convert_json_to_ics(schedule):
             cal.events.add(ics_event)
 
         except Exception as e:
-            print('Could not add event ' + event['title'] + 'to calendar: ' + str(e))
+            print('Could not add event ' + event['title'] + ' to calendar: ' + str(e))
 
     return cal
 
