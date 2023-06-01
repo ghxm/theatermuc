@@ -8,14 +8,17 @@ import itertools
 from collections import defaultdict
 from ics import Calendar, Event
 from seleniumbase import Driver
+import backoff
 
+@backoff.on_exception(backoff.expo, requests.ConnectTimeout, max_value=32)
 def get_html(url):
     """
     Get html from url.
     """
 
     # add header
-    headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36'}
+    headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36; ghxm.github.io/theatermuc/ data collection'}
+
 
     # allow cookies
     s = requests.Session()

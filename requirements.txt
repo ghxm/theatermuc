@@ -1,6 +1,7 @@
 arrow==1.2.3
 async-generator==1.10
 attrs==23.1.0
+backoff==2.2.1
 beautifulsoup4==4.12.2
 behave==1.2.6
 certifi==2023.5.7
