@@ -3,7 +3,7 @@ name: Generate site and deploy content to Pages
 
 on:
   schedule:
-    - cron: "0 */3 * * *"
+    - cron: "0 */5 * * *"
   # Runs on pushes targeting the default branch
   push:
     branches: ["master"]
