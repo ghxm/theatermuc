@@ -7,8 +7,7 @@ import os
 import itertools
 from collections import defaultdict
 from ics import Calendar, Event
-import undetected_chromedriver as uc
-from selenium import webdriver
+from seleniumbase import Driver
 
 def get_html(url):
     """
@@ -28,12 +27,7 @@ def get_html(url):
 
 
 def get_selenium_driver():
-    options = webdriver.ChromeOptions()
-    options.headless = True
-    options.add_argument("start-maximized")
-    #options.add_experimental_option("excludeSwitches", ["enable-automation"])
-    #options.add_experimental_option('useAutomationExtension', False)
-    driver = uc.Chrome(options=options)
+    driver = Driver(browser="chrome", uc=True, headless=False)
 
     return driver
 
