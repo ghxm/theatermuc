@@ -42,6 +42,9 @@ def get_html_selenium(url, driver = None):
     if driver is None:
         driver = get_selenium_driver()
 
+    # add timeout
+    driver.set_page_load_timeout(30)
+
     driver.get(url)
 
     html = driver.page_source

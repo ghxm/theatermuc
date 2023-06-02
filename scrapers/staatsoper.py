@@ -13,12 +13,17 @@ current_month = utils.get_current_month()
 
 base_url = 'https://www.staatsoper.de'
 
+error = None
 
 def get_events(month, driver):
 
     import utils
 
-    program_html = utils.get_html_selenium(f'https://www.staatsoper.de/spielplan/{month}', driver)
+    try:
+        program_html = utils.get_html_selenium(f'https://www.staatsoper.de/spielplan/{month}', driver)
+    except Exception as e:
+        print(e)
+        return []
 
     program_bs = utils.make_soup(program_html)
 
@@ -197,3 +202,6 @@ for day in event_days:
 
 # write to file
 utils.write_json(schedule_events, 'staatsoper_schedule.json')
+
+if error is not None:
+    raise error
