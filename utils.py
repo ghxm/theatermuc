@@ -192,6 +192,8 @@ def run_all_scrapers(dir = 'scrapers/'):
                 # get path of scraper
                 path = os.path.join(dir, scraper)
 
+                print('Running scraper: ' + scraper)
+
                 # run scraper using exec
                 exec(open(path).read(), globals(), globals())
 
