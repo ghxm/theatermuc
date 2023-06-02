@@ -17,11 +17,14 @@ error = None
 
 def get_events(month, driver):
 
+    global error
+
     import utils
 
     try:
         program_html = utils.get_html_selenium(f'https://www.staatsoper.de/spielplan/{month}', driver)
     except Exception as e:
+        error = e
         print(e)
         return []
 
