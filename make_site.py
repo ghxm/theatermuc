@@ -83,17 +83,19 @@ for year in schedule.keys():
 
 date_weekdays = {date: utils.get_weekday(date) for date in dates}
 
+tz = pytz.timezone('Europe/Berlin')
+
+
 # sort schedule by date
 for year in schedule.keys():
     for kw in schedule[year].keys():
         for date in schedule[year][kw].keys():
             for venue in schedule[year][kw][date].keys():
-                schedule[year][kw][date][venue] = sorted(schedule[year][kw][date][venue], key=lambda k: k['start_datetime'])
+                schedule[year][kw][date][venue] = sorted(schedule[year][kw][date][venue], key=lambda k: k['start_datetime'] if k['start_datetime'] is not None else datetime.now(tz))
 
 def path_exists(path):
     return os.path.exists(path)
 
-tz = pytz.timezone('Europe/Berlin')
 
 
 
