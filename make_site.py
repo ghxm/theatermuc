@@ -70,8 +70,8 @@ for year in schedule.keys():
             for venue in schedule[year][kw][date].keys():
                 for event in schedule[year][kw][date][venue]:
                     event['date_datetime'] = utils.make_date(event['date'], 'Europe/Berlin') if event['date'] is not None else None
-                    event['start_datetime'] = datetime.fromisoformat(event['start_datetime']) if event['start_datetime'] is not None else None
-                    event['end_datetime'] = datetime.fromisoformat(event['end_datetime']) if event['end_datetime'] is not None else None
+                    event['start_datetime'] = utils.ensure_tz(datetime.fromisoformat(event['start_datetime'])) if event['start_datetime'] is not None else None
+                    event['end_datetime'] = utils.ensure_tz(datetime.fromisoformat(event['end_datetime'])) if event['end_datetime'] is not None else None
 
 # get a dict of date-weekdays
 ## get all dates
@@ -82,6 +82,13 @@ for year in schedule.keys():
             dates.append(date)
 
 date_weekdays = {date: utils.get_weekday(date) for date in dates}
+
+# sort schedule by date
+for year in schedule.keys():
+    for kw in schedule[year].keys():
+        for date in schedule[year][kw].keys():
+            for venue in schedule[year][kw][date].keys():
+                schedule[year][kw][date][venue] = sorted(schedule[year][kw][date][venue], key=lambda k: k['start_datetime'])
 
 def path_exists(path):
     return os.path.exists(path)

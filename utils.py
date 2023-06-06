@@ -107,6 +107,16 @@ def make_date(date, tz):
 
     return result.date()
 
+def ensure_tz(dt, tz = "Europe/Berlin"):
+    """
+    Ensure that datetime object has timezone.
+    """
+
+    if dt.tzinfo is None:
+        dt = pytz.timezone(tz).localize(dt)
+
+    return dt
+
 
 # translate a german month string to a number
 def german_month_to_num(month):
