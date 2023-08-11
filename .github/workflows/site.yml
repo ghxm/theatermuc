@@ -35,7 +35,7 @@ jobs:
       - name: Build
         run: |
           # Build your site here
-          pip3 install -r requirements.txt
+          pip install --upgrade --force-reinstall requirements.txt
           python3 make_site.py
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
