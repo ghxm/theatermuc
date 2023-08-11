@@ -30,7 +30,7 @@ def get_html(url):
 
 
 def get_selenium_driver():
-    driver = Driver(browser="chrome", uc=True, headless=False)
+    driver = Driver(browser="chrome", uc=True, headless=False, accept_insecure_certs=True)
 
     return driver
 
