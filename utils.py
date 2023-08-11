@@ -24,8 +24,6 @@ def get_html(url):
     # allow cookies
     s = requests.Session()
 
-    # add certifi certs
-    s.verify = os.path.join(certifi.where())
 
     r = s.get(url, headers=headers)
     r.raise_for_status()
