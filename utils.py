@@ -9,6 +9,7 @@ from collections import defaultdict
 from ics import Calendar, Event
 from seleniumbase import Driver
 import backoff
+import certifi
 
 @backoff.on_exception(backoff.expo, requests.ConnectTimeout, max_value=32)
 def get_html(url):
@@ -22,6 +23,9 @@ def get_html(url):
 
     # allow cookies
     s = requests.Session()
+
+    # add certifi certs
+    s.verify = os.path.join(certifi.where())
 
     r = s.get(url, headers=headers)
     r.raise_for_status()
