@@ -30,7 +30,11 @@ def get_html(url):
 
 
 def get_selenium_driver():
-    driver = Driver(browser="chrome", uc=True, headless=False, accept_insecure_certs=True)
+    from selenium.webdriver.chrome.options import Options
+    options = Options()
+    options.accept_insecure_certs = True
+
+    driver = Driver(browser="chrome", uc=True, headless=False, options=options)
 
     return driver
 
