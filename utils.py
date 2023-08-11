@@ -25,7 +25,7 @@ def get_html(url):
     s = requests.Session()
 
 
-    r = s.get(url, headers=headers, verify=certifi.where())
+    r = s.get(url, headers=headers, verify=False)
     r.raise_for_status()
 
     return r.text
