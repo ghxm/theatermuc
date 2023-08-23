@@ -101,3 +101,19 @@ td.text span {
     display: inline-block;
     max-width: 100%;
 }
+
+.font-size-99 {
+    font-size: 0.99em;
+}
+
+.font-size-95 {
+    font-size: 0.95em;
+}
+
+.font-size-110 {
+    font-size: 1.1em;
+}
+
+.font-size-120 {
+    font-size: 1.2em;
+}

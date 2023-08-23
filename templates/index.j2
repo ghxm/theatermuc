@@ -62,7 +62,7 @@
                             <div class="row" id="date-{{  day }}">
 
                                 <div class="col-12 col-lg-2" >
-                                    <p class="h5 text-nowrap">{% if day==today %}Today{% else %}{{ date_weekdays[day] }}{% endif %}, {{ day }}</p>
+                                    <p class="h5 text-nowrap">{% if day==today %}Today{% else %}{{ date_weekdays[day][:3] }}{% endif %}, {{ day }}</p>
                                 </div>
 
                                 <div class="ps-0 ps-lg-4 col-12 col-lg-10" id="events-{day}">
@@ -76,18 +76,17 @@
                                                 <table class="ms-2 mb-3 table-events table-fixed  table border rounded table-striped">
                                                     <thead>
                                                     <tr class="row-title text-reset">
-                                                        <th style="width:25%">Title</th>
-                                                        <th style="width:10%">Begin</th>
-                                                        <th style="width:10%">End</th>
-                                                        <th style="width:20%">Location</th>
+                                                        <th class="ps-2" style="width:42%"><span class="font-size-95">Title</span></th>
+                                                        <th style="width:20%"><span class="font-size-95">Time</span></th>
+                                                        <th style="width:28%"><span class="font-size-95">Location</span></th>
                                                     </tr>
                                                     </thead>
                                                     <tbody>
                                                     {% for event in events %}
                                                         <tr class="row-event">
                                                             <td><a class="text-decoration-none fw-bold" target="_blank" href="{{ event.urls.info }}">{{ event.title }}</a></td>
-                                                            <td>{%  if event.start_datetime != None %}{{ event.start_datetime.strftime('%H:%M') }} {% endif %}</td>
-                                                            <td>{%  if event.end_datetime != None %}{{ event.end_datetime.strftime('%H:%M') }} {% endif %}</td>
+                                                            <td>{%  if event.start_datetime != None %}{{ event.start_datetime.strftime('%H:%M') }}{% endif %}
+                                                            {%  if event.end_datetime != None %}&ndash; {{ event.end_datetime.strftime('%H:%M') }}{% endif %}</td>
                                                             <td class="text text-break"><span>{% if event.location != None %}{{ event.location }}{% endif %}</span></td>
                                                         </tr>
                                                     {% endfor %}
@@ -114,6 +113,31 @@
         {% endfor %}
 
 
+<div id="info" class="row me-xl-1">
+
+
+    <div id = "" class="col-12 col-lg-2 col-xl-3 me-3 me-xl-1">
+
+        <p class="h5">Info</p>
+
+
+    </div>
+
+    <div id = "about" class="col-lg">
+
+            <p class="h3">About</p>
+
+            <p>
+                This is an overview of current theater plays in Munich, Germany. It is updated daily and collected automatically from the websites of the theaters. There is no selection or curation of the plays. The data is provided as is and without warranty. If you have any questions or suggestions, please write to <code>event꩜mucnoise.com</code> .
+            </p>
+
+
+    </div>
+
+
+</div>
+
+
 <div id="log" class="text-end">
     <a href="#top" class="btn btn-outline-primary btn-sm mb-3">^</a>
     <p>
@@ -132,6 +156,29 @@
 </div>
 
 </div>
+
+<script>
+
+    // replace swirls with @
+    const copyListener = (event) => {
+      const range = window.getSelection().getRangeAt(0),
+        rangeContents = range.cloneContents(),
+        pageLink = `Read more at: ${document.location.href}`,
+        helper = document.createElement("div");
+
+      helper.appendChild(rangeContents);
+
+      // replace swirls with @
+      helper.innerText = helper.innerText.replace(/꩜/g, "@");
+      helper.innerHTML = helper.innerHTML.replace(/꩜/g, "@");
+
+      event.clipboardData.setData("text/plain", helper.innerText);
+      event.clipboardData.setData("text/html", helper.innerHTML);
+      event.preventDefault();
+    };
+document.addEventListener("copy", copyListener);
+
+</script>
 
 <script data-goatcounter="https://mxhg-theater-mucnoise.goatcounter.com/count"
         async src="//gc.zgo.at/count.js"></script>
