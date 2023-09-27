@@ -90,6 +90,11 @@ for event_day in event_days:
 
         description = None
 
+        start_datetime = None
+        end_datetime = None
+        start_time = None
+        end_time = None
+
         if len(time_match) > 0:
             start_time = time_match[0].strip().replace('.', ':')
 
