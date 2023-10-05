@@ -73,20 +73,21 @@ for event_day in event_days:
         except:
             description = None
 
-        desc_p = description.find_all('p')
+        desc_ps = description.find_all('p')
 
 
         # try to match the time and the rest will be location
         time = None
         location = None
 
-        if len(desc_p) > 0:
+        for p in desc_ps:
 
-            time_match = re.findall(r'(–*\s*[0-9]{1,2}:[0-9]{1,2}\s*)', desc_p[0].get_text().strip())
+            time_match = re.findall(r'(–*\s*[0-9]{1,2}:[0-9]{1,2}\s*)', p.get_text().strip())
 
-            if time_match is not None:
+            if len(time_match) > 0:
                 time = ''.join(time_match)
-                location = desc_p[0].get_text().strip().replace(time, '').strip()
+                location = p.get_text().strip().replace(time, '').strip()
+                break
 
         description = None
 
@@ -119,9 +120,9 @@ for event_day in event_days:
 
 
 
-        if len(desc_p) > 1:
+        if len(desc_ps) > 1:
             description = ''
-            for i, p in enumerate(desc_p):
+            for i, p in enumerate(desc_ps):
                 if i > 0:
                     description = description + " " + p.get_text().strip()
 
