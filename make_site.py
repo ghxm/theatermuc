@@ -5,7 +5,7 @@ import json
 from datetime import datetime
 import pytz
 
-site_title = 'Theater Munich'
+site_title = 'theater.mucnoise.com'
 
 
 schedules_dir = 'data/'
