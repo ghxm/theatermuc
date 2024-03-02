@@ -36,11 +36,11 @@
         <div class='d-flex justify-content-end'>
         <a href="#info" class="btn me-2 btn-outline-primary  btn-sm">info</a>
         <a href="#log" class="btn me-2 btn-outline-primary  btn-sm">log</a>
-        {%  if path_exists('site/static/schedule.ics') %}
-                <a href="static/schedule.ics" class="btn me-2 btn-outline-secondary btn-sm">.ics</a>
+        {%  if path_exists('site/schedule.ics') %}
+                <a href="schedule.ics" class="btn me-2 btn-outline-secondary btn-sm">.ics</a>
         {% endif %}
-        {%  if path_exists('site/static/schedule.json') %}
-                <a href="static/schedule.json" class="btn me-2 btn-outline-secondary btn-sm">.json</a>
+        {%  if path_exists('site/schedule.json') %}
+                <a href="schedule.json" class="btn me-2 btn-outline-secondary btn-sm">.json</a>
         {% endif %}
         </div>
     </div>
