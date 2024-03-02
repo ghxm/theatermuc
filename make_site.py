@@ -17,11 +17,11 @@ if len([f for f in os.listdir(utils.path_to_data_folder()) if f.endswith('json')
 
     log = utils.run_all_scrapers()
 
-    utils.write_json(log, 'site/static/log.json')
+    utils.write_json(log, 'site/log.json')
 
 else:
     try:
-        log = json.load(open('site/static/log.json', 'r'))
+        log = json.load(open('site/log.json', 'r'))
     except:
         log = {'success': [], 'errors': [], 'dev': False}
 
@@ -46,13 +46,13 @@ schedule_str = open(schedule_path, 'r').read()
 schedule = json.loads(schedule_str)
 
 try:
-    utils.write_ics(schedule, 'site/static/schedule.ics')
+    utils.write_ics(schedule, 'site/schedule.ics')
 except Exception as e:
     print('Error writing ics file:')
     print(e)
 
 try:
-    utils.write_json(schedule, 'site/static/schedule.json')
+    utils.write_json(schedule, 'site/schedule.json')
 except Exception as e:
     print('Error writing json file:')
     print(e)
