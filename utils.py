@@ -325,17 +325,16 @@ def get_year(date):
     if isinstance(date, str):
         date = make_datetime(date, '00:00', 'Europe/Berlin')
 
-    # retrun the year
-    return date.strftime('%Y')
+    # retrun the ISO year
+    return date.strftime('%G')
 
 def get_weeknum(date):
 
     if isinstance(date, str):
         date = make_datetime(date, '00:00', 'Europe/Berlin')
 
-    # retrun the week number
+    # retrun the ISO week number
     return date.strftime('%V')
-
 
 def remove_past_events(schedule, date=get_today(dt=True)):
 
