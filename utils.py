@@ -7,7 +7,7 @@ import os
 import itertools
 from collections import defaultdict
 from ics import Calendar, Event
-from seleniumbase import Driver
+# Selenium imports moved to get_selenium_driver function
 import backoff
 import certifi
 
