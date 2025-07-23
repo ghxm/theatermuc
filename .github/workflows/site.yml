@@ -39,7 +39,7 @@ jobs:
           pip install --upgrade --force-reinstall -r requirements.txt
           python3 make_site.py
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v1
+        uses: actions/upload-pages-artifact@v3
         with:
           # Upload site filder
           path: './site'
@@ -54,14 +54,14 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v2
-  keepalive-job:
-    name: Keepalive Workflow
+        uses: actions/deploy-pages@v4
+
+  workflow-keepalive:
+    if: github.event_name == 'schedule'
     runs-on: ubuntu-latest
     permissions:
       actions: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: gautamkrishnar/keepalive-workflow@v2
+      - uses: liskin/gh-workflow-keepalive@v1
 
 
