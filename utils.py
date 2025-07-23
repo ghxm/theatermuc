@@ -32,23 +32,64 @@ def get_html(url):
 
 
 def get_selenium_driver():
-
-    driver = Driver(browser="chrome", uc=True, headless=False)
-
+    from selenium import webdriver
+    from selenium.webdriver.chrome.service import Service
+    from webdriver_manager.chrome import ChromeDriverManager
+    from selenium.webdriver.chrome.options import Options
+    import os
+    
+    chrome_options = Options()
+    
+    # Only run headless in GitHub Actions
+    if os.environ.get('GITHUB_ACTIONS'):
+        chrome_options.add_argument("--headless")
+    
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("--window-size=1920,1080")
+    chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+    chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    chrome_options.add_experimental_option('useAutomationExtension', False)
+    chrome_options.add_argument("--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36")
+    
+    service = Service(ChromeDriverManager().install())
+    driver = webdriver.Chrome(service=service, options=chrome_options)
+    
+    # Execute script to remove webdriver property
+    driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+    
     return driver
 
 def get_html_selenium(url, driver = None):
     """
     Get html from url using selenium.
     """
+    import time
+    from selenium.webdriver.common.by import By
+    from selenium.webdriver.support.ui import WebDriverWait
+    from selenium.webdriver.support import expected_conditions as EC
 
     if driver is None:
         driver = get_selenium_driver()
 
     # add timeout
-    driver.set_page_load_timeout(30)
+    driver.set_page_load_timeout(60)
 
     driver.get(url)
+    
+    # Wait for Cloudflare challenge to complete
+    # Look for signs that the page has loaded properly
+    try:
+        # Wait up to 30 seconds for the page to not contain Cloudflare challenge
+        WebDriverWait(driver, 30).until_not(
+            EC.title_contains("Just a moment")
+        )
+        # Additional wait for dynamic content
+        time.sleep(5)
+    except:
+        # If Cloudflare check doesn't work, just wait a bit
+        time.sleep(10)
 
     html = driver.page_source
 
