@@ -132,7 +132,7 @@ for day in event_days:
 
         # find title
         try:
-            title = event.find(class_='activity-list__text').find(re.compile(r'h[0-9]')).get_text().strip()
+            title = event.find(class_='activity-list__text').find(class_='h3').get_text().strip()
         except:
             title = None
 
