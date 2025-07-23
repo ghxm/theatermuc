@@ -33,19 +33,11 @@ jobs:
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v3
-      - name: Setup Chrome
-        uses: browser-actions/setup-chrome@v1
-        with:
-          chrome-version: stable
       - name: Build
         run: |
           # Build your site here
           pip install --upgrade --force-reinstall -r requirements.txt
-          echo "Starting site generation..."
           python3 make_site.py
-          echo "Site generation completed successfully"
-        env:
-          GITHUB_ACTIONS: true
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
