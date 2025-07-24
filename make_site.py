@@ -2,6 +2,7 @@ import jinja2
 import utils
 import os
 import json
+import sys
 from datetime import datetime
 import pytz
 
@@ -12,8 +13,11 @@ schedules_dir = 'data/'
 schedule_filename = 'schedule.json'
 schedule_path = utils.path_to_data_folder(schedule_filename)
 
-# if there are no files in the data folder, run all scrapers
-if len([f for f in os.listdir(utils.path_to_data_folder()) if f.endswith('json')]) == 0:
+# Check if --skip-scrapers flag is passed
+skip_scrapers = '--skip-scrapers' in sys.argv
+
+# if there are no files in the data folder and not skipping scrapers, run all scrapers
+if not skip_scrapers and len([f for f in os.listdir(utils.path_to_data_folder()) if f.endswith('json')]) == 0:
 
     log = utils.run_all_scrapers()
 

@@ -1,4 +1,4 @@
-# Simple workflow for deploying static content to GitHub Pages
+# Theater schedule scraping and site generation workflow
 name: Generate site and deploy content to Pages
 
 on:
@@ -24,30 +24,90 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Discover scrapers dynamically
+  discover-scrapers:
+    runs-on: ubuntu-22.04
+    outputs:
+      scrapers: ${{ steps.find-scrapers.outputs.scrapers }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Find scrapers
+        id: find-scrapers
+        run: |
+          scrapers=$(ls scrapers/*.py | sed 's|scrapers/||' | sed 's|\.py$||' | jq -R -s -c 'split("\n")[:-1]')
+          echo "scrapers=$scrapers" >> $GITHUB_OUTPUT
+
+  # Run scrapers in parallel using matrix strategy
+  scrape:
+    runs-on: ubuntu-22.04
+    needs: discover-scrapers
+    strategy:
+      fail-fast: false
+      matrix:
+        scraper: ${{ fromJson(needs.discover-scrapers.outputs.scrapers) }}
+    timeout-minutes: ${{ matrix.scraper == 'staatsoper' && 10 || 5 }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Setup Chrome (for Selenium scrapers)
+        if: matrix.scraper == 'staatsoper'
+        uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: stable
+      - name: Install dependencies
+        run: pip install --upgrade --force-reinstall -r requirements.txt
+      - name: Run scraper
+        run: PYTHONPATH=. python3 scrapers/${{ matrix.scraper }}.py
+        env:
+          GITHUB_ACTIONS: true
+      - name: Upload scraper data
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.scraper }}-data
+          path: data/${{ matrix.scraper }}_schedule.json
+
+  # Build site from scraped data
   build:
     runs-on: ubuntu-22.04
-    timeout-minutes: 15
+    timeout-minutes: 5
+    needs: [discover-scrapers, scrape]
     steps:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v3
-      - name: Setup Chrome
-        uses: browser-actions/setup-chrome@v1
+      - name: Setup Python
+        uses: actions/setup-python@v4
         with:
-          chrome-version: stable
-      - name: Build
+          python-version: '3.10'
+      - name: Install dependencies
+        run: pip install --upgrade --force-reinstall -r requirements.txt
+      - name: Download all scraper data
+        uses: actions/download-artifact@v3
+        with:
+          path: artifacts
+      - name: Copy scraper data to data directory
         run: |
-          # Build your site here
-          pip install --upgrade --force-reinstall -r requirements.txt
-          python3 make_site.py
+          mkdir -p data
+          for scraper in ${{ join(fromJson(needs.discover-scrapers.outputs.scrapers), ' ') }}; do
+            if [ -f "artifacts/${scraper}-data/${scraper}_schedule.json" ]; then
+              cp "artifacts/${scraper}-data/${scraper}_schedule.json" "data/"
+            fi
+          done
+      - name: Generate site
+        run: python3 make_site.py --skip-scrapers
         env:
           GITHUB_ACTIONS: true
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload site filder
+          # Upload site folder
           path: './site'
           
   # Deployment job
