@@ -30,7 +30,7 @@ def get_events(month):
 
 
 # get all month values
-program_html = utils.get_html('https://www.residenztheater.de/spielplan')
+program_html = utils.get_html('https://www.gaertnerplatztheater.de/de/spielplan')
 
 program_bs = utils.make_soup(program_html)
 
