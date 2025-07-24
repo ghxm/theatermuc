@@ -1,5 +1,6 @@
 import utils
 import re
+import time
 
 
 tz = 'Europe/Berlin'
@@ -10,180 +11,148 @@ current_year = utils.get_current_year()
 
 base_url = 'https://www.gaertnerplatztheater.de/'
 
-
-def get_events(month):
-
-    import utils
-    import re
-
-    program_html = utils.get_html(f'https://www.gaertnerplatztheater.de/de/spielplan/{month}.html')
-
-    program_bs = utils.make_soup(program_html)
-
-    event_days = [d for d in program_bs.find_all(class_='tag clearfix')]
-
-    for day in event_days:
-        day['data-month-code'] = month
-
-
-    return event_days
-
-
-# get all month values
-program_html = utils.get_html('https://www.gaertnerplatztheater.de/de/spielplan/index.html')
-
-program_bs = utils.make_soup(program_html)
-
-months = [o.get_text().replace(' ', '-').lower() for o in program_bs.find(id='filter-date').find_all('option') if re.search(r'[0-9]', o.get_text()) is not None]
-
-event_days = []
-
-for month in months:
-    event_days += get_events(month)
-
-
 schedule_events = []
 
-for day in event_days:
+# Start fetching events from AJAX API
+offset = 0
+batch_size = 20
+last_timestamp = int(time.time())
 
+while True:
+    # Construct AJAX URL
+    ajax_url = f'https://www.gaertnerplatztheater.de/de/spielplan/index.html?ajax=1&offset={offset}&letzterTermin={last_timestamp}'
+    
     try:
-        month, year = day['data-month-code'].split('-')
-
-        month = utils.german_month_to_num(month)
-
-
+        ajax_html = utils.get_html(ajax_url)
+        ajax_bs = utils.make_soup(ajax_html)
+        
+        # Find all performance divs
+        performances = ajax_bs.find_all('div', class_='performance')
+        
+        if not performances:
+            # No more events, break the loop
+            break
+            
+        print(f"Found {len(performances)} events at offset {offset}")
+        
+        for performance in performances:
+            try:
+                # Extract date - look for pattern like "So, 01.02.26"
+                date_elem = performance.find('div', class_='fs-3')
+                if date_elem:
+                    date_text = date_elem.get_text().strip()
+                    # Remove weekday prefix like "So, "
+                    date_clean = re.sub(r'^[A-Za-z]{2,3},\s*', '', date_text)
+                    # Convert DD.MM.YY to DD.MM.YYYY
+                    if len(date_clean.split('.')) == 3 and len(date_clean.split('.')[-1]) == 2:
+                        day, month, year = date_clean.split('.')
+                        year = '20' + year if int(year) < 50 else '19' + year
+                        date_clean = f"{day}.{month}.{year}"
+                else:
+                    date_clean = None
+                    
+                # Extract time
+                time_elem = performance.find('div', class_='fw-bold')
+                if time_elem:
+                    time_text = time_elem.get_text().strip()
+                    # Extract time pattern like "15.00–17.55 Uhr"
+                    time_match = re.search(r'(\d{1,2}\.\d{2})(?:–(\d{1,2}\.\d{2}))?\s*Uhr', time_text)
+                    if time_match:
+                        start_time = time_match.group(1).replace('.', ':')
+                        end_time = time_match.group(2).replace('.', ':') if time_match.group(2) else None
+                    else:
+                        start_time = None
+                        end_time = None
+                else:
+                    start_time = None
+                    end_time = None
+                    
+                # Extract title
+                title_elem = performance.find('a')
+                if title_elem:
+                    title = title_elem.get_text().strip()
+                else:
+                    title = None
+                    
+                # Extract genre/sparte
+                genre_elem = performance.find('span', class_='text-uppercase')
+                if genre_elem:
+                    genre = genre_elem.get_text().strip()
+                else:
+                    genre = None
+                    
+                # Extract URLs
+                urls_dict = {}
+                if title_elem and title_elem.get('href'):
+                    slug = title_elem['href']
+                    if slug.startswith('./'):
+                        slug = slug[2:]
+                    urls_dict['info'] = base_url + 'de/' + slug
+                    
+                # Extract location from CSS classes
+                location = None
+                classes = performance.get('class', [])
+                for cls in classes:
+                    if cls.startswith('ort-'):
+                        # Map ort IDs to locations (would need to be expanded)
+                        if cls == 'ort-57':
+                            location = 'Bühne'
+                        elif cls == 'ort-58':
+                            location = 'Foyer'
+                        elif cls == 'ort-92':
+                            location = 'Orchesterprobensaal'
+                        elif cls == 'ort-107':
+                            location = 'Studiobühne'
+                        break
+                        
+                # Create datetime objects
+                try:
+                    start_datetime = utils.make_datetime(date_clean, start_time, tz) if date_clean and start_time else None
+                except:
+                    start_datetime = None
+                    
+                try:
+                    end_datetime = utils.make_datetime(date_clean, end_time, tz) if date_clean and end_time else None
+                except:
+                    end_datetime = None
+                    
+                if date_clean is None or title is None:
+                    print(f'Skipping event with missing date ({date_clean}) or title ({title})')
+                    continue
+                    
+                # Add to schedule_events
+                schedule_events.append({
+                    'date': utils.ymd_string(date_clean),
+                    'year': utils.get_year(date_clean),
+                    'kw': utils.get_weeknum(date_clean),
+                    'venue': venue,
+                    'slug': slug if 'slug' in locals() else None,
+                    'title': title,
+                    'tags': [genre] if genre else [],
+                    'urls': urls_dict,
+                    'time': f"{start_time} Uhr" if start_time else None,
+                    'cost': None,
+                    'start_datetime': start_datetime.isoformat() if start_datetime else None,
+                    'end_datetime': end_datetime.isoformat() if end_datetime else None,
+                    'location': location,
+                    'description': genre
+                })
+                
+            except Exception as e:
+                print(f'Error parsing performance: {e}')
+                continue
+                
+        # Update offset for next batch
+        offset += len(performances)
+        
+        # Add delay to be respectful
+        time.sleep(1)
+        
     except Exception as e:
-        month = None
-        year = None
+        print(f'Error fetching events at offset {offset}: {e}')
+        break
 
-    # find events for day
-    events = day.find_all(class_ = 'performance')
+print(f'Total events found: {len(schedule_events)}')
 
-    # find date
-    for event in events:
-
-        try:
-            day_num = day.find(class_='day').get_text().strip()
-        except:
-            try:
-                day_num = day.find_previous(class_='anchor')['name'].replace('a_', '')
-            except:
-                day_num = None
-
-        try:
-
-            date = f'{day_num}.{month}.{year}'
-
-        except:
-            date = None
-
-        # find time
-        try:
-            time = event.find(class_='time').get_text().strip()
-        except:
-            time = None
-
-        if time is not None:
-            time_match = re.findall(r'(–*\s*[0-9]{1,2}\.[0-9]{1,2}\s*)', time)
-
-
-        if len(time_match) > 0:
-            start_time = time_match[0].strip().replace('.', ':')
-
-            try:
-                end_time = time_match[1].replace('–', '').strip().replace('.', ':')
-            except:
-                end_time = None
-
-
-        try:
-            # make datetime
-            start_datetime = utils.make_datetime(date, start_time, tz)
-        except:
-            start_datetime = None
-
-        try:
-            # make datetime
-            end_datetime = utils.make_datetime(date, end_time, tz)
-        except:
-            end_datetime = None
-
-        try:
-            location = event.find(class_='location').get_text().strip()
-        except:
-            location = None
-
-        # find title
-        try:
-            title = event.find(class_='title').find(re.compile(r'h[0-9]')).get_text().strip()
-        except:
-            title = None
-
-        # find description
-        try:
-            tags = [event.find(class_='title').find('p').get_text().strip()]
-
-        except:
-            tags = []
-
-        try:
-            description += event.find(class_='teaserText').get_text().strip()
-        except:
-            description = None
-
-
-        # find urls
-        urls_dict = {}
-
-        try:
-            urls_dict['ticket'] = event.find(class_='ticketLink').find('a')['href']
-        except:
-            pass
-
-
-        slug = None
-        try:
-            slug = event.find(class_='title').find(re.compile(r'h[0-9]')).find('a')['href']
-            slug = slug.replace('./', 'de/', 1)
-            urls_dict['info'] = base_url + slug
-        except:
-            pass
-
-        try:
-            urls_dict['ics'] = event.find(class_='icalLink').find('a')['href']
-        except:
-            pass
-
-        # find price
-        prices_dict = {}
-        try:
-            prices_dict['info'] = event.find(class_='preise').get_text().strip()
-        except:
-            pass
-
-        if date is None:
-            print('No date found for event: ' + str(title))
-            continue
-
-        # add to schedule_events
-        schedule_events.append({'date': utils.ymd_string(date) if date is not None else None,
-                                'year': utils.get_year(date),
-                                'kw': utils.get_weeknum(date),
-                                'venue': venue,
-                                'slug': slug,
-                                'title': title.title() if title is not None else None,
-                                'tags': None,
-                                'urls': urls_dict,
-                                'time': ''.join([t.strip() for t in time_match]) if time_match is not None and len(time_match) > 0 else None,
-                                'cost': prices_dict, # TODO: add cost
-                                'start_datetime': start_datetime.isoformat() if start_datetime is not None else None,
-                                'end_datetime': end_datetime.isoformat() if end_datetime is not None else None,
-                                'location': location,
-                                'description': description})
-
-
-
-
-
-# write to file
+# Write to file
 utils.write_json(schedule_events, 'gaertnerplatztheater_schedule.json')
