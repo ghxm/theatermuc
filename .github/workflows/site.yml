@@ -66,7 +66,7 @@ jobs:
         env:
           GITHUB_ACTIONS: true
       - name: Upload scraper data
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.scraper }}-data
           path: data/${{ matrix.scraper }}_schedule.json
@@ -89,7 +89,7 @@ jobs:
       - name: Install dependencies
         run: pip install --upgrade --force-reinstall -r requirements.txt
       - name: Download all scraper data
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           path: artifacts
       - name: Copy scraper data to data directory
@@ -105,7 +105,7 @@ jobs:
         env:
           GITHUB_ACTIONS: true
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           # Upload site folder
           path: './site'
