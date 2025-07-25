@@ -232,6 +232,30 @@ def path_to_data_folder(filename=None):
         # get path of data folder
         return os.path.join(path, 'data/')
 
+def download_backup_schedule():
+    """Download the current complete schedule from the website as backup."""
+    try:
+        backup_url = 'https://theater.mucnoise.com/schedule.json'
+        print(f'Downloading backup schedule from {backup_url}')
+        response = requests.get(backup_url, timeout=30)
+        response.raise_for_status()
+        return response.json()
+    except Exception as e:
+        print(f'Failed to download backup schedule: {e}')
+        return None
+
+def extract_venue_events(complete_schedule, venue_name):
+    """Extract events for a specific venue from the complete schedule."""
+    if not complete_schedule:
+        return []
+    
+    venue_events = []
+    for event in complete_schedule:
+        if event.get('venue') == venue_name:
+            venue_events.append(event)
+    
+    return venue_events
+
 def run_all_scrapers(dir = 'scrapers/'):
 
     # get list of all files in dir
@@ -242,9 +266,21 @@ def run_all_scrapers(dir = 'scrapers/'):
         'errors': [],
         'dev': False}
 
+    # Download backup schedule once for all failed scrapers
+    backup_schedule = None
+    
+    # Define venue name mapping for scrapers
+    venue_mapping = {
+        'staatsoper.py': 'Bayerische Staatsoper',
+        'kammerspiele.py': 'Münchner Kammerspiele', 
+        'residenztheater.py': 'Residenztheater',
+        'volkstheater.py': 'Volkstheater',
+        'gaertnerplatztheater.py': 'Gärtnerplatztheater',
+        'freieszene.py': 'Freie Szene'
+    }
+
     # loop over all scrapers
     for scraper in scrapers:
-
             try:
                 # get path of scraper
                 path = os.path.join(dir, scraper)
@@ -257,7 +293,31 @@ def run_all_scrapers(dir = 'scrapers/'):
                 # add scraper to success list
                 log['success'].append(scraper)
             except Exception as e:
-                log['errors'].append({'scraper': scraper, 'error': str(e)})
+                error_info = {'scraper': scraper, 'error': str(e)}
+                
+                # Try to use backup data for this venue
+                if backup_schedule is None:
+                    backup_schedule = download_backup_schedule()
+                
+                if backup_schedule and scraper in venue_mapping:
+                    venue_name = venue_mapping[scraper]
+                    venue_events = extract_venue_events(backup_schedule, venue_name)
+                    
+                    if venue_events:
+                        # Save backup data to the expected file
+                        output_file = scraper.replace('.py', '_schedule.json')
+                        write_json(venue_events, output_file)
+                        print(f'Error in scraper {scraper}, using backup data ({len(venue_events)} events)')
+                        error_info['backup_used'] = True
+                        error_info['backup_events'] = len(venue_events)
+                    else:
+                        print(f'Error in scraper {scraper}, no backup data found for venue {venue_name}')
+                        error_info['backup_used'] = False
+                else:
+                    print(f'Error in scraper {scraper}, backup data not available')
+                    error_info['backup_used'] = False
+                
+                log['errors'].append(error_info)
                 print('Error in scraper: ' + scraper)
                 print(e)
 
