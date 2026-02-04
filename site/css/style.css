@@ -1,10 +1,27 @@
-/* font */
+/* font - self-hosted to avoid GDPR/Abmahnung issues with Google Fonts */
 
 @font-face {
-    font-family: 'Open Sans';
+    font-family: 'Playfair Display';
     font-style: normal;
     font-weight: 400;
-    src: local('Open Sans Regular'), local('OpenSans-Regular'), url(https://fonts.gstatic.com/s/opensans/v13/cJZKeOuBrn4kERxqtaUH3ZBw1xU1rKptJj_0jans920.woff2) format('woff2');
+    src: url('../fonts/PlayfairDisplay-Regular.woff2') format('woff2');
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Playfair Display';
+    font-style: normal;
+    font-weight: 700;
+    src: url('../fonts/PlayfairDisplay-Bold.woff2') format('woff2');
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Playfair Display';
+    font-style: italic;
+    font-weight: 400;
+    src: url('../fonts/PlayfairDisplay-Italic.woff2') format('woff2');
+    font-display: swap;
 }
 
 html {
@@ -12,7 +29,7 @@ html {
 }
 
 body {
-    font-family: 'Open Sans', sans-serif;
+    font-family: 'Playfair Display', Georgia, serif;
     font-size: 0.99em !important;
     line-height: 1.5em;
     color: #333;
