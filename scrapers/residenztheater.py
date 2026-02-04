@@ -119,6 +119,9 @@ for day in event_days:
         # find title
         try:
             title = event.find(class_='schedule-act__title').get_text().strip()
+            # clean up title - remove newlines and trailing date (e.g. " - 4 Feb")
+            title = ' '.join(title.split())  # normalize whitespace
+            title = re.sub(r'\s*-\s*\d{1,2}\s+[A-Za-z]{3,}$', '', title)  # remove trailing date
         except:
             title = None
 

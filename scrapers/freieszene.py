@@ -37,30 +37,25 @@ none_count = 0
 events = []
 
 # get today's date
-
 date_today = utils.get_today(dt=True)
 
+# fetch events in 10-day increments for the next 18 months
+max_iterations = 55  # ~550 days, about 18 months
+for i in range(max_iterations):
+    events_month = get_events(utils.ymd_string(date_today))
 
-# get all year-month values
-for year in range(current_year, current_year + 2):
-    for month in range(current_month, 13):
+    # advance by 10 days
+    date_today = date_today + timedelta(days=10)
 
-        month = str(month).zfill(2)
+    events.extend(events_month)
 
-        events_month = get_events(utils.ymd_string(date_today))
-
-        # add 25 days to date_today
-        date_today = date_today + timedelta(days=10)
-
-
-        events.extend(events_month)
-
-        if len(events_month) == 0:
-            none_count += 1
-        elif none_count > 3:
+    if len(events_month) == 0:
+        none_count += 1
+        # stop if we have 5 consecutive empty periods (50 days with no events)
+        if none_count >= 5:
             break
-        else:
-            none_count = 0
+    else:
+        none_count = 0
 
 events = list({v.uid:v for v in events}.values())
 

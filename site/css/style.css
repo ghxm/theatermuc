@@ -36,6 +36,36 @@ body {
     background-color: #fff;
 }
 
+/* Navigation and UI elements - keep Bootstrap sans-serif */
+.btn,
+#row-top,
+#row-top a {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+}
+
+/* Top header menu (Theater/Events switch) - sans-serif */
+body > .container-fluid > .row:first-child {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+}
+
+/* Date, KW, year headers - bold Playfair */
+.h5, h5 {
+    font-weight: 700 !important;
+}
+
+/* Theater venue names - bold, not italic */
+.theater > .h6,
+.theater > p.h6 {
+    font-weight: 700 !important;
+    font-style: normal !important;
+}
+
+/* Table headers - sans-serif */
+thead th,
+.table-events thead th {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+}
+
 /* Styles */
 
 body { overflow-x: hidden; }
