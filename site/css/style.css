@@ -29,7 +29,7 @@ html {
 }
 
 body {
-    font-family: 'Playfair Display', Georgia, serif;
+    font-family: 'Playfair Display', Georgia, serif !important;
     font-size: 0.99em !important;
     line-height: 1.5em;
     color: #333;
