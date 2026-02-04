@@ -49,6 +49,10 @@ for event_day in event_days:
         except:
             event_time = None
 
+        time_match = []
+        start_time = None
+        end_time = None
+
         if event_time is not None:
             time_match = re.findall(r'(–*\s*[0-9]{1,2}:[0-9]{1,2}\s*)', event_time)
 
@@ -60,17 +64,20 @@ for event_day in event_days:
                 except:
                     end_time = None
 
+        start_datetime = None
+        end_datetime = None
+
         try:
             # make datetime
             start_datetime = utils.make_datetime(date, start_time, tz)
         except:
-            start_datetime = None
+            pass
 
         try:
             # make datetime
             end_datetime = utils.make_datetime(date, end_time, tz)
         except:
-            end_datetime = None
+            pass
 
         # EVENT LOCATION
         try:

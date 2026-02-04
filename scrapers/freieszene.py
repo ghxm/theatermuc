@@ -132,7 +132,7 @@ for event in events:
         pass
 
     if date is None:
-        print('No date found for event: ' + title)
+        print('No date found for event: ' + str(event.name))
         continue
 
     # location
@@ -150,11 +150,11 @@ for event in events:
     try:
         title = event.name
 
-        loc_match = re.search(location.lower() + r':\s*', title.lower())
+        if location is not None:
+            loc_match = re.search(location.lower() + r':\s*', title.lower())
 
-        if loc_match:
-
-            title = title[loc_match.end():]
+            if loc_match:
+                title = title[loc_match.end():]
 
         if title.lower().startswith('hofspielhaus:'):
             title = title[13:]

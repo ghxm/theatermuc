@@ -56,8 +56,8 @@ for day in event_days:
         try:
             date = day.find(class_='schedule-act__date').get_text().strip()
 
-            # remove weekday
-            date = re.sub(r'^[A-Za-z]{2,3}\s', '', date)
+            # remove weekday (handles formats like "Mi. 4 Feb" or "Mi 4 Feb")
+            date = re.sub(r'^[A-Za-z]{2,3}\.?\s*', '', date)
 
             month = re.findall(r'[A-Za-zä]{3,}', date)
 
@@ -89,10 +89,12 @@ for day in event_days:
         except:
             location = None
 
+        time_match = []
         if info is not None:
             time_match = re.findall(r'(–*\s*[0-9]{1,2}\.[0-9]{1,2}\s*)', info)
 
-
+        start_time = None
+        end_time = None
         if len(time_match) > 0:
             start_time = time_match[0].strip().replace('.', ':')
 

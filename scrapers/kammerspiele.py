@@ -22,7 +22,7 @@ for event_day in event_days:
     except:
         date = None
 
-    events = event_day.find_all('div', {'class': 'preview-event'})
+    events = event_day.find_all('li', {'class': 'preview-event'})
 
     for event in events:
 
@@ -37,7 +37,7 @@ for event_day in event_days:
             title = None
 
         try:
-            tags = event.find('span', {'class': 'event-label'}).find_all('span')
+            tags = event.find('div', {'class': 'event-labels'}).find_all('span', {'class': 'event-label'})
             tags = [tag.get_text().strip() for tag in tags]
         except:
             tags = None
@@ -58,7 +58,7 @@ for event_day in event_days:
                     urls_dict['info'] = base_url + url
                 elif re.search('program', url) and url.startswith('http'):
                     urls_dict['info'] = url
-                elif re.search('\.ics', url):
+                elif re.search(r'\.ics', url):
                     urls_dict['cal'] = url
                 else:
                     urls_dict['other'].append(url)
@@ -73,12 +73,12 @@ for event_day in event_days:
         except:
             description = None
 
-        desc_ps = description.find_all('p')
-
+        desc_ps = description.find_all('p') if description is not None else []
 
         # try to match the time and the rest will be location
         time = None
         location = None
+        time_match = []
 
         for p in desc_ps:
 
