@@ -117,3 +117,99 @@ td.text span {
 .font-size-120 {
     font-size: 1.2em;
 }
+
+/* Text decoration and styling */
+
+.strikethrough {
+    text-decoration: line-through;
+}
+
+.cancelled span {
+    text-decoration: line-through;
+}
+
+.cancelled::before {
+    content: "(cancelled) ";
+    font-style: italic;
+}
+
+.ongoing::before {
+    content: "(ongoing) ";
+    font-style: italic;
+}
+
+.event-title-link {
+    text-decoration: none;
+}
+
+.cancelled .event-title-link {
+    text-decoration: line-through;
+}
+
+/* Text colors */
+
+.text-reduced {
+    color: #838383;
+}
+
+.text-grey {
+    color: darkgray !important;
+}
+
+/* Row styling */
+
+.row-odd {
+    background-color: none;
+}
+
+.row-even {
+    background-color: #f0f0f0;
+}
+
+/* Border utilities */
+
+.no-border-left {
+    border-left: none !important;
+}
+
+.no-border-right {
+    border-right: none !important;
+}
+
+.no-border-top {
+    border-top: none !important;
+}
+
+.no-border-bottom {
+    border-bottom: none !important;
+}
+
+.row-no-border-bottom>td, .row-no-border-bottom>th {
+    border-bottom: none !important;
+}
+
+.row-no-border-left>td, .row-no-border-left>th {
+    border-left: none !important;
+}
+
+.row-no-border-right>td, .row-no-border-right>th {
+    border-right: none !important;
+}
+
+.row-no-border-top>td, .row-no-border-top>th {
+    border-top: none !important;
+}
+
+.border-dotted {
+    border-style: dotted !important;
+    border-width: 0.8px;
+}
+
+.border-dashed {
+    border-style: dashed !important;
+    border-width: 0.8px;
+}
+
+.border-grey {
+    border-color: darkgray !important;
+}
