@@ -11,7 +11,7 @@ from ics import Calendar, Event
 import backoff
 import certifi
 
-@backoff.on_exception(backoff.expo, requests.ConnectTimeout, max_value=32)
+@backoff.on_exception(backoff.expo, (requests.ConnectTimeout, requests.ReadTimeout), max_value=32, max_tries=3)
 def get_html(url):
     """
     Get html from url.
@@ -20,12 +20,11 @@ def get_html(url):
     # add header
     headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36; ghxm.github.io/theatermuc/ data collection'}
 
-
     # allow cookies
     s = requests.Session()
 
-
-    r = s.get(url, headers=headers, verify=False)
+    # timeout: 30 seconds for connection, 60 seconds for read
+    r = s.get(url, headers=headers, verify=False, timeout=(30, 60))
     r.raise_for_status()
 
     return r.text

@@ -17,8 +17,10 @@ schedule_events = []
 offset = 0
 batch_size = 20
 last_timestamp = int(time.time())
+max_iterations = 50  # Safety limit to prevent infinite loops
 
-while True:
+iteration = 0
+while iteration < max_iterations:
     # Construct AJAX URL
     ajax_url = f'https://www.gaertnerplatztheater.de/de/spielplan/index.html?ajax=1&offset={offset}&letzterTermin={last_timestamp}'
     
@@ -144,13 +146,17 @@ while True:
                 
         # Update offset for next batch
         offset += len(performances)
-        
+        iteration += 1
+
         # Add delay to be respectful
         time.sleep(1)
-        
+
     except Exception as e:
         print(f'Error fetching events at offset {offset}: {e}')
         break
+
+if iteration >= max_iterations:
+    print(f'Warning: Reached max iterations ({max_iterations}), stopping')
 
 print(f'Total events found: {len(schedule_events)}')
 
