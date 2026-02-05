@@ -42,7 +42,10 @@ date_today = utils.get_today(dt=True)
 # fetch events in 10-day increments for the next 18 months
 max_iterations = 55  # ~550 days, about 18 months
 for i in range(max_iterations):
-    events_month = get_events(utils.ymd_string(date_today))
+    date_str = utils.ymd_string(date_today)
+    events_month = get_events(date_str)
+
+    print(f'Iteration {i+1}: {date_str} - found {len(events_month)} events')
 
     # advance by 10 days
     date_today = date_today + timedelta(days=10)
@@ -51,8 +54,9 @@ for i in range(max_iterations):
 
     if len(events_month) == 0:
         none_count += 1
-        # stop if we have 5 consecutive empty periods (50 days with no events)
-        if none_count >= 5:
+        # stop if we have 10 consecutive empty periods (100 days with no events)
+        if none_count >= 10:
+            print(f'Stopping after {none_count} consecutive empty periods')
             break
     else:
         none_count = 0
