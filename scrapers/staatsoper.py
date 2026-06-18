@@ -41,7 +41,10 @@ driver = utils.get_selenium_driver()
 
 # get all year-month values
 for year in range(current_year, current_year + 2):
-    for month in range(current_month, 13):
+    # start at the current month for the current year, but cover the full
+    # year for subsequent years (otherwise Jan-May of next year are skipped)
+    start_month = current_month if year == current_year else 1
+    for month in range(start_month, 13):
 
         month = str(month).zfill(2)
 
@@ -202,6 +205,21 @@ for day in event_days:
 
 
 
+
+# deduplicate events: the /spielplan/{year-month} page returns the full
+# program regardless of the requested month, so the same event is collected
+# once per month-request. Use the unique slug as the dedup key, falling back
+# to (title, start_datetime, location) when no slug is available.
+seen = set()
+deduped_events = []
+for event in schedule_events:
+    key = event['slug'] if event['slug'] is not None else (event['title'], event['start_datetime'], event['location'])
+    if key in seen:
+        continue
+    seen.add(key)
+    deduped_events.append(event)
+
+schedule_events = deduped_events
 
 # write to file
 utils.write_json(schedule_events, 'staatsoper_schedule.json')
