@@ -128,7 +128,21 @@ jobs:
                       ok = json.load(f).get("outcome") == "success"
               except (FileNotFoundError, ValueError):
                   ok = False
-              (success if ok else errors).append(name if ok else {"scraper": name})
+              reason = None
+              if not ok:
+                  reason = "scraper failed"
+              else:
+                  # a green exit with no events is still a failed scrape
+                  try:
+                      with open(f"data/{s}_schedule.json") as f:
+                          if len(json.load(f)) == 0:
+                              ok, reason = False, "no events"
+                  except (FileNotFoundError, ValueError):
+                      ok, reason = False, "no data"
+              if ok:
+                  success.append(name)
+              else:
+                  errors.append({"scraper": name, "error": reason})
           json.dump({"success": success, "errors": errors, "dev": False},
                     open("site/log.json", "w"))
           EOF
