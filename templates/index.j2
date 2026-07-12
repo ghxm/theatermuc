@@ -33,15 +33,15 @@
 
 
 
-    <div id="row-top" class="row my-2 d-none d-md-block">
+    <div id="row-top" class="row">
         <div class='d-flex justify-content-end'>
         <a href="#info" class="btn me-2 btn-outline-primary  btn-sm">info</a>
         <a href="#log" class="btn me-2 btn-outline-primary  btn-sm">log</a>
         {%  if path_exists('site/schedule.ics') %}
-                <a href="schedule.ics" class="btn me-2 btn-outline-secondary btn-sm">.ics</a>
+                <a href="schedule.ics" class="btn me-2 btn-outline-secondary btn-sm d-none d-md-block">.ics</a>
         {% endif %}
         {%  if path_exists('site/schedule.json') %}
-                <a href="schedule.json" class="btn me-2 btn-outline-secondary btn-sm">.json</a>
+                <a href="schedule.json" class="btn me-2 btn-outline-secondary btn-sm d-none d-md-block">.json</a>
         {% endif %}
         </div>
     </div>
