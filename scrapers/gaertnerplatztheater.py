@@ -1,6 +1,8 @@
 import utils
 import re
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 tz = 'Europe/Berlin'
 venue = 'Gärtnerplatztheater'
@@ -26,6 +28,14 @@ def get_all_performances():
     """
     session = requests.Session()
     session.headers.update({'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36; ghxm.github.io/theatermuc/ data collection'})
+
+    # retry transient connection/read timeouts and 5xx responses
+    retry = Retry(total=4, backoff_factor=1,
+                  status_forcelist=[429, 500, 502, 503, 504],
+                  allowed_methods=frozenset(['GET', 'POST']))
+    adapter = HTTPAdapter(max_retries=retry)
+    session.mount('https://', adapter)
+    session.mount('http://', adapter)
 
     # seed the session cookie by loading the page once
     session.get(spielplan_url, timeout=(30, 60))
