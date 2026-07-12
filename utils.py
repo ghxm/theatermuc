@@ -60,12 +60,9 @@ def get_selenium_driver():
     
     return driver
 
-def get_html_selenium(url, driver = None, wait_for = None):
+def get_html_selenium(url, driver = None):
     """
     Get html from url using selenium.
-
-    wait_for: optional CSS selector to wait for before reading the page, so the
-    result reflects JS-rendered content rather than page-load timing.
     """
     import time
     from selenium.webdriver.common.by import By
@@ -98,15 +95,6 @@ def get_html_selenium(url, driver = None, wait_for = None):
     except:
         # If Cloudflare check doesn't work, just wait a bit
         time.sleep(10)
-
-    # Wait for the JS-rendered content we actually need to appear
-    if wait_for is not None:
-        try:
-            WebDriverWait(driver, 30).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, wait_for))
-            )
-        except TimeoutException:
-            print(f'Timed out waiting for "{wait_for}" on {url}')
 
     html = driver.page_source
 
