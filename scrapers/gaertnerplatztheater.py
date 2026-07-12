@@ -19,7 +19,7 @@ try:
     # Load the main spielplan page
     spielplan_url = 'https://www.gaertnerplatztheater.de/de/spielplan/index.html'
     print(f'Loading {spielplan_url}')
-    program_html = utils.get_html_selenium(spielplan_url, driver)
+    program_html = utils.get_html_selenium(spielplan_url, driver, wait_for='div.performance')
     program_bs = utils.make_soup(program_html)
 
     # Find all performance divs

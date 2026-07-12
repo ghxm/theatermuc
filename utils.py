@@ -39,10 +39,6 @@ def get_selenium_driver():
     
     chrome_options = Options()
 
-    # return control at DOMContentLoaded instead of waiting for the full load
-    # event, so a hanging sub-resource can't stall driver.get() on JS-heavy pages
-    chrome_options.page_load_strategy = 'eager'
-
     # Only run headless in GitHub Actions
     if os.environ.get('GITHUB_ACTIONS'):
         chrome_options.add_argument("--headless")
@@ -64,9 +60,12 @@ def get_selenium_driver():
     
     return driver
 
-def get_html_selenium(url, driver = None):
+def get_html_selenium(url, driver = None, wait_for = None):
     """
     Get html from url using selenium.
+
+    wait_for: optional CSS selector to wait for before reading the page, so the
+    result reflects JS-rendered content rather than page-load timing.
     """
     import time
     from selenium.webdriver.common.by import By
@@ -81,7 +80,7 @@ def get_html_selenium(url, driver = None):
     driver.set_page_load_timeout(60)
 
     # a stalled sub-resource can still trip the timeout; the DOM we need is
-    # already loaded by then, so fall back to whatever rendered
+    # usually loaded by then, so fall back to whatever rendered
     try:
         driver.get(url)
     except TimeoutException:
@@ -99,6 +98,15 @@ def get_html_selenium(url, driver = None):
     except:
         # If Cloudflare check doesn't work, just wait a bit
         time.sleep(10)
+
+    # Wait for the JS-rendered content we actually need to appear
+    if wait_for is not None:
+        try:
+            WebDriverWait(driver, 30).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, wait_for))
+            )
+        except TimeoutException:
+            print(f'Timed out waiting for "{wait_for}" on {url}')
 
     html = driver.page_source
 
