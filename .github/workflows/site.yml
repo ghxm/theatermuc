@@ -62,14 +62,26 @@ jobs:
       - name: Install dependencies
         run: pip install --upgrade --force-reinstall -r requirements.txt
       - name: Run scraper
+        id: run
         run: PYTHONPATH=. python3 scrapers/${{ matrix.scraper }}.py
         env:
           GITHUB_ACTIONS: true
+      - name: Record scraper status
+        if: always()
+        run: |
+          mkdir -p status
+          echo '{"scraper": "${{ matrix.scraper }}.py", "outcome": "${{ steps.run.outcome }}"}' > status/${{ matrix.scraper }}.json
       - name: Upload scraper data
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.scraper }}-data
           path: data/${{ matrix.scraper }}_schedule.json
+      - name: Upload scraper status
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.scraper }}-status
+          path: status/${{ matrix.scraper }}.json
 
   # Build site from scraped data
   build:
@@ -102,6 +114,24 @@ jobs:
               cp "artifacts/${scraper}-data/${scraper}_schedule.json" "data/"
             fi
           done
+      - name: Build scraper log
+        run: |
+          mkdir -p site
+          python3 - <<'EOF'
+          import json
+          scrapers = ${{ needs.discover-scrapers.outputs.scrapers }}
+          success, errors = [], []
+          for s in scrapers:
+              name = f"{s}.py"
+              try:
+                  with open(f"artifacts/{s}-status/{s}.json") as f:
+                      ok = json.load(f).get("outcome") == "success"
+              except (FileNotFoundError, ValueError):
+                  ok = False
+              (success if ok else errors).append(name if ok else {"scraper": name})
+          json.dump({"success": success, "errors": errors, "dev": False},
+                    open("site/log.json", "w"))
+          EOF
       - name: Generate site
         run: python3 make_site.py --skip-scrapers
         env:
