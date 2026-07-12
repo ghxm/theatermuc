@@ -38,7 +38,11 @@ def get_selenium_driver():
     import os
     
     chrome_options = Options()
-    
+
+    # return control at DOMContentLoaded instead of waiting for the full load
+    # event, so a hanging sub-resource can't stall driver.get() on JS-heavy pages
+    chrome_options.page_load_strategy = 'eager'
+
     # Only run headless in GitHub Actions
     if os.environ.get('GITHUB_ACTIONS'):
         chrome_options.add_argument("--headless")
@@ -68,6 +72,7 @@ def get_html_selenium(url, driver = None):
     from selenium.webdriver.common.by import By
     from selenium.webdriver.support.ui import WebDriverWait
     from selenium.webdriver.support import expected_conditions as EC
+    from selenium.common.exceptions import TimeoutException
 
     if driver is None:
         driver = get_selenium_driver()
@@ -75,8 +80,13 @@ def get_html_selenium(url, driver = None):
     # add timeout
     driver.set_page_load_timeout(60)
 
-    driver.get(url)
-    
+    # a stalled sub-resource can still trip the timeout; the DOM we need is
+    # already loaded by then, so fall back to whatever rendered
+    try:
+        driver.get(url)
+    except TimeoutException:
+        print(f'Page load timed out, using partial DOM: {url}')
+
     # Wait for Cloudflare challenge to complete
     # Look for signs that the page has loaded properly
     try:
