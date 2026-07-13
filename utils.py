@@ -272,6 +272,60 @@ venue_mapping = {
 }
 
 
+def download_last_good_data(scraper, max_artifacts = 30):
+    """
+    Get a scraper's events from the most recent non-empty {scraper}-data
+    artifact of a previous workflow run. Returns None if unavailable.
+
+    Artifacts are per venue, so unlike the published schedule they cannot be
+    wiped out by publishing a build that is missing a venue.
+    """
+    import io
+    import zipfile
+
+    token = os.environ.get('GITHUB_TOKEN')
+    repo = os.environ.get('GITHUB_REPOSITORY')
+
+    if not token or not repo:
+        return None
+
+    headers = {'Authorization': f'Bearer {token}',
+               'Accept': 'application/vnd.github+json'}
+
+    try:
+        r = requests.get(f'https://api.github.com/repos/{repo}/actions/artifacts',
+                         headers=headers,
+                         params={'name': f'{scraper}-data', 'per_page': max_artifacts},
+                         timeout=30)
+        r.raise_for_status()
+        artifacts = r.json().get('artifacts', [])
+    except Exception as e:
+        print(f'Could not list artifacts for {scraper}: {e}')
+        return None
+
+    # newest first, skipping this run's own (possibly empty) upload
+    artifacts.sort(key=lambda a: a.get('created_at', ''), reverse=True)
+
+    for artifact in artifacts:
+        if artifact.get('expired'):
+            continue
+
+        try:
+            z = requests.get(artifact['archive_download_url'], headers=headers, timeout=60)
+            z.raise_for_status()
+            with zipfile.ZipFile(io.BytesIO(z.content)) as zf:
+                with zf.open(f'{scraper}_schedule.json') as f:
+                    events = json.load(f)
+        except Exception as e:
+            print(f'Could not read artifact {artifact.get("id")} for {scraper}: {e}')
+            continue
+
+        if events:
+            return events
+
+    return None
+
+
 def build_scrape_log(scrapers, status_dir = 'artifacts', data_dir = 'data'):
     """
     Build the scraper log from the matrix jobs' status files.
@@ -321,12 +375,16 @@ def build_scrape_log(scrapers, status_dir = 'artifacts', data_dir = 'data'):
 
         error_info = {'scraper': name, 'error': reason}
 
-        if not backup_fetched:
-            backup_schedule = download_backup_schedule()
-            backup_fetched = True
+        # prefer this scraper's last good artifact, fall back to the published schedule
+        venue_events = download_last_good_data(scraper)
 
-        venue = venue_mapping.get(name)
-        venue_events = extract_venue_events(backup_schedule, venue) if venue else []
+        if not venue_events:
+            if not backup_fetched:
+                backup_schedule = download_backup_schedule()
+                backup_fetched = True
+
+            venue = venue_mapping.get(name)
+            venue_events = extract_venue_events(backup_schedule, venue) if venue else []
 
         if venue_events:
             write_json(venue_events, data_path)
