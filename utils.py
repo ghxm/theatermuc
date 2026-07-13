@@ -261,6 +261,87 @@ def extract_venue_events(complete_schedule, venue_name):
     
     return venue_events
 
+# Venue name per scraper, used to pull a venue's events out of the backup schedule
+venue_mapping = {
+    'staatsoper.py': 'Bayerische Staatsoper',
+    'kammerspiele.py': 'Münchner Kammerspiele',
+    'residenztheater.py': 'Residenztheater',
+    'volkstheater.py': 'Volkstheater',
+    'gaertnerplatztheater.py': 'Gärtnerplatztheater',
+    'freieszene.py': 'Freie Szene'
+}
+
+
+def build_scrape_log(scrapers, status_dir = 'artifacts', data_dir = 'data'):
+    """
+    Build the scraper log from the matrix jobs' status files.
+
+    A scraper counts as failed if it errored, produced no data file, or exited
+    cleanly with zero events. For each failed venue the last published schedule
+    is used as backup data, so the venue stays on the site instead of silently
+    disappearing.
+    """
+
+    log = {
+        'success': [],
+        'errors': [],
+        'dev': False}
+
+    # Download backup schedule once for all failed scrapers
+    backup_schedule = None
+    backup_fetched = False
+
+    for scraper in scrapers:
+
+        name = scraper + '.py'
+        data_path = os.path.join(data_dir, scraper + '_schedule.json')
+
+        # did the matrix job for this scraper succeed?
+        try:
+            with open(os.path.join(status_dir, scraper + '-status', scraper + '.json')) as f:
+                ok = json.load(f).get('outcome') == 'success'
+        except (FileNotFoundError, ValueError):
+            ok = False
+
+        if not ok:
+            reason = 'scraper failed'
+        else:
+            # a clean exit with no events is still a failed scrape
+            reason = None
+            try:
+                with open(data_path) as f:
+                    if len(json.load(f)) == 0:
+                        ok, reason = False, 'no events'
+            except (FileNotFoundError, ValueError):
+                ok, reason = False, 'no data'
+
+        if ok:
+            log['success'].append(name)
+            continue
+
+        error_info = {'scraper': name, 'error': reason}
+
+        if not backup_fetched:
+            backup_schedule = download_backup_schedule()
+            backup_fetched = True
+
+        venue = venue_mapping.get(name)
+        venue_events = extract_venue_events(backup_schedule, venue) if venue else []
+
+        if venue_events:
+            write_json(venue_events, data_path)
+            print(f'{name}: {reason}, using backup data ({len(venue_events)} events)')
+            error_info['backup_used'] = True
+            error_info['backup_events'] = len(venue_events)
+        else:
+            print(f'{name}: {reason}, no backup data found for venue {venue}')
+            error_info['backup_used'] = False
+
+        log['errors'].append(error_info)
+
+    return log
+
+
 def run_all_scrapers(dir = 'scrapers/'):
 
     # get list of all files in dir
@@ -273,16 +354,6 @@ def run_all_scrapers(dir = 'scrapers/'):
 
     # Download backup schedule once for all failed scrapers
     backup_schedule = None
-    
-    # Define venue name mapping for scrapers
-    venue_mapping = {
-        'staatsoper.py': 'Bayerische Staatsoper',
-        'kammerspiele.py': 'Münchner Kammerspiele', 
-        'residenztheater.py': 'Residenztheater',
-        'volkstheater.py': 'Volkstheater',
-        'gaertnerplatztheater.py': 'Gärtnerplatztheater',
-        'freieszene.py': 'Freie Szene'
-    }
 
     # loop over all scrapers
     for scraper in scrapers:
