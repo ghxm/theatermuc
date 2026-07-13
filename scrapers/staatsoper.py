@@ -12,17 +12,27 @@ current_year = utils.get_current_year()
 current_month = utils.get_current_month()
 
 base_url = 'https://www.staatsoper.de'
+spielplan_url = base_url + '/spielplan'
+
+# number of months to scrape, starting with the current one
+months_ahead = 18
 
 error = None
 
 def get_events(month, driver):
+    """
+    Fetch one month from the calendar's ajax endpoint.
+
+    The /spielplan/{month} page itself is only the shell and always renders the
+    same default month, so the month has to come from activities.ajax.
+    """
 
     global error
 
     import utils
 
     try:
-        program_html = utils.get_html_selenium(f'https://www.staatsoper.de/spielplan/{month}', driver)
+        program_html = utils.get_html_selenium(f'{spielplan_url}/{month}/activities.ajax', driver)
     except Exception as e:
         error = e
         print(e)
@@ -34,36 +44,36 @@ def get_events(month, driver):
 
     return event_days
 
-none_count = 0
 event_days = []
 
 driver = utils.get_selenium_driver()
 
-# get all year-month values
-for year in range(current_year, current_year + 2):
-    # start at the current month for the current year, but cover the full
-    # year for subsequent years (otherwise Jan-May of next year are skipped)
-    start_month = current_month if year == current_year else 1
-    for month in range(start_month, 13):
+# load the schedule page once, so the ajax endpoint is requested in session
+utils.get_html_selenium(spielplan_url, driver)
 
-        month = str(month).zfill(2)
+months_with_events = 0
 
-        # wait 1-8 seconds
-        time.sleep(random.randint(1, 8))
+for i in range(months_ahead):
 
-        events_month = get_events(f'{year}-{month}', driver)
+    month_index = current_month - 1 + i
+    year = current_year + month_index // 12
+    month = str(month_index % 12 + 1).zfill(2)
 
-        event_days.extend(events_month)
+    # wait 1-5 seconds
+    time.sleep(random.randint(1, 5))
 
-        if len(events_month) == 0:
-            none_count += 1
-        elif none_count > 3:
-            break
-        else:
-            none_count = 0
+    events_month = get_events(f'{year}-{month}', driver)
+
+    # months without events are normal (the house is closed over the summer)
+    if len(events_month) > 0:
+        months_with_events += 1
+
+    event_days.extend(events_month)
+
+print(f'{months_with_events} of {months_ahead} months returned events')
 
 # close driver
-driver.close()
+driver.quit()
 
 
 schedule_events = []
@@ -221,8 +231,14 @@ for event in schedule_events:
 
 schedule_events = deduped_events
 
+print(f'Total events found: {len(schedule_events)}')
+
 # write to file
 utils.write_json(schedule_events, 'staatsoper_schedule.json')
 
-if error is not None:
-    raise error
+# scraping nothing at all means the site blocked us, so fail instead of
+# quietly publishing an empty schedule
+if len(schedule_events) == 0:
+    if error is not None:
+        raise error
+    raise Exception('No events found, staatsoper likely blocked the scraper')
