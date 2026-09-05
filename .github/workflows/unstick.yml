@@ -1,0 +1,28 @@
+# Force-cancels site workflow runs stuck in "waiting" (e.g. a deployment that never
+# resolves), which would otherwise hold the "pages" concurrency group forever.
+name: Cancel stale waiting runs
+
+on:
+  schedule:
+    - cron: "30 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  actions: write
+
+jobs:
+  cancel-stale:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Force-cancel site runs waiting for more than 2 hours
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cutoff=$(date -u -d '2 hours ago' +%Y-%m-%dT%H:%M:%SZ)
+          gh api "repos/${{ github.repository }}/actions/workflows/site.yml/runs?status=waiting&per_page=50" \
+            --jq ".workflow_runs[] | select(.created_at < \"$cutoff\") | .id" |
+          while read -r id; do
+            echo "force-cancelling run $id"
+            gh api -X POST "repos/${{ github.repository }}/actions/runs/$id/force-cancel"
+          done
+      - uses: liskin/gh-workflow-keepalive@v1
