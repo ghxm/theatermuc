@@ -1,0 +1,25 @@
+# Diagnostic: which runner pools can reach www.gaertnerplatztheater.de?
+# Manual dispatch only. Remove once the runner pool for the scraper is chosen.
+name: Connectivity test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  probe:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-22.04, ubuntu-24.04-arm, macos-latest]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 5
+    steps:
+      - name: Probe
+        run: |
+          ip=$(curl -s -m 15 https://api.ipify.org || echo unknown)
+          echo "RESULT runner=${{ matrix.runner }} egress_ip=$ip"
+          for host in www.gaertnerplatztheater.de tickets.staatstheater.bayern; do
+            out=$(curl -s -o /dev/null -m 25 --connect-timeout 10 \
+              -w "http=%{http_code} connect=%{time_connect}s" "https://$host/" 2>&1) || out="$out (curl exit $?)"
+            echo "RESULT runner=${{ matrix.runner }} host=$host $out"
+          done
