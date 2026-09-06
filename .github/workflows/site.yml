@@ -41,7 +41,9 @@ jobs:
 
   # Run scrapers in parallel using matrix strategy
   scrape:
-    runs-on: ubuntu-22.04
+    # gaertnerplatztheater.de drops connections from the Ubuntu runner pools but
+    # accepts the macOS pool (13.105.117.0/24), so that scraper runs on macOS.
+    runs-on: ${{ matrix.scraper == 'gaertnerplatztheater' && 'macos-latest' || 'ubuntu-22.04' }}
     needs: discover-scrapers
     strategy:
       fail-fast: false
