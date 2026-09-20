@@ -173,6 +173,7 @@ def german_month_to_num(month):
     months = {'Januar': 1,
                 'Februar': 2,
                 'März': 3,
+                'Mrz': 3,
                 'April': 4,
                 'Mai': 5,
                 'Juni': 6,
