@@ -17,39 +17,60 @@ spielplan_url = base_url + '/spielplan'
 # number of months to scrape, starting with the current one
 months_ahead = 18
 
-error = None
+# run from inside the loaded schedule page, so the request carries the page's
+# Cloudflare clearance like the site's own JavaScript requests do
+fetch_js = """
+const [url, done] = [arguments[0], arguments[arguments.length - 1]];
+fetch(url, {headers: {'X-Requested-With': 'XMLHttpRequest'}, credentials: 'same-origin'})
+  .then(r => r.text().then(t => done({status: r.status, text: t})))
+  .catch(e => done({status: -1, text: String(e)}));
+"""
 
 def get_events(month, driver):
     """
     Fetch one month from the calendar's ajax endpoint.
 
     The /spielplan/{month} page itself is only the shell and always renders the
-    same default month, so the month has to come from activities.ajax.
+    same default month, so the month has to come from activities.ajax. The
+    endpoint is fetched from inside the loaded page: navigating to it directly
+    trips Cloudflare's challenge, which then costs about 40 s per month and
+    silently drops the months it hits.
     """
-
-    global error
 
     import utils
 
-    try:
-        program_html = utils.get_html_selenium(f'{spielplan_url}/{month}/activities.ajax', driver)
-    except Exception as e:
-        error = e
-        print(e)
-        return []
+    url = f'{spielplan_url}/{month}/activities.ajax'
 
-    program_bs = utils.make_soup(program_html)
+    # Cloudflare rejects individual requests with a 403 now and then; a retry a
+    # few seconds later usually passes
+    attempts = 4
+    for attempt in range(attempts):
+        res = driver.execute_async_script(fetch_js, url)
+        if res['status'] == 200 and 'Just a moment' not in res['text']:
+            return utils.make_soup(res['text']).find_all(class_ = 'activity-group')
+        print(f'{month}: request blocked (http {res["status"]}), attempt {attempt + 1} of {attempts}')
+        time.sleep(5)
 
-    event_days = program_bs.find_all(class_ = 'activity-group')
-
-    return event_days
+    # a blocked month would leave a hole in the published schedule, so fail
+    # and let the build restore the last complete scrape instead
+    raise Exception(f'{month}: activities.ajax blocked {attempts} times, staatsoper likely blocked the scraper')
 
 event_days = []
 
 driver = utils.get_selenium_driver()
 
 # load the schedule page once, so the ajax endpoint is requested in session
-utils.get_html_selenium(spielplan_url, driver)
+shell_html = utils.get_html_selenium(spielplan_url, driver)
+
+# a page without the schedule means the Cloudflare challenge did not clear;
+# it will not clear for the month requests either, so fail now instead of
+# timing out on each of them
+if 'activity-group' not in shell_html:
+    title = driver.title
+    driver.quit()
+    raise Exception(f'Schedule page did not render (title {title!r}), staatsoper likely blocked the scraper')
+
+driver.set_script_timeout(60)
 
 months_with_events = 0
 
@@ -239,6 +260,4 @@ utils.write_json(schedule_events, 'staatsoper_schedule.json')
 # scraping nothing at all means the site blocked us, so fail instead of
 # quietly publishing an empty schedule
 if len(schedule_events) == 0:
-    if error is not None:
-        raise error
     raise Exception('No events found, staatsoper likely blocked the scraper')

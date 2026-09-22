@@ -41,9 +41,10 @@ jobs:
 
   # Run scrapers in parallel using matrix strategy
   scrape:
-    # gaertnerplatztheater.de drops connections from the Ubuntu runner pools but
-    # accepts the macOS pool (13.105.117.0/24), so that scraper runs on macOS.
-    runs-on: ${{ matrix.scraper == 'gaertnerplatztheater' && 'macos-latest' || 'ubuntu-22.04' }}
+    # gaertnerplatztheater.de drops connections from the Ubuntu runner pools and
+    # Cloudflare on staatsoper.de challenges them far more often than the macOS
+    # pool (13.105.117.0/24), so those two scrapers run on macOS.
+    runs-on: ${{ (matrix.scraper == 'gaertnerplatztheater' || matrix.scraper == 'staatsoper') && 'macos-latest' || 'ubuntu-22.04' }}
     needs: discover-scrapers
     strategy:
       fail-fast: false
@@ -66,7 +67,7 @@ jobs:
         run: pip install --upgrade --force-reinstall -r requirements.txt
       - name: Run scraper
         id: run
-        run: PYTHONPATH=. python3 scrapers/${{ matrix.scraper }}.py
+        run: PYTHONPATH=. python3 -u scrapers/${{ matrix.scraper }}.py
         env:
           GITHUB_ACTIONS: true
       - name: Record scraper status
