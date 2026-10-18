@@ -22,7 +22,7 @@ months_ahead = 18
 fetch_js = """
 const [url, done] = [arguments[0], arguments[arguments.length - 1]];
 fetch(url, {headers: {'X-Requested-With': 'XMLHttpRequest'}, credentials: 'same-origin'})
-  .then(r => r.text().then(t => done({status: r.status, text: t})))
+  .then(r => r.text().then(t => done({status: r.status, cf: r.headers.get('cf-mitigated'), text: t})))
   .catch(e => done({status: -1, text: String(e)}));
 """
 
@@ -49,7 +49,8 @@ def get_events(month, driver):
         res = driver.execute_async_script(fetch_js, url)
         if res['status'] == 200 and 'Just a moment' not in res['text']:
             return utils.make_soup(res['text']).find_all(class_ = 'activity-group')
-        print(f'{month}: request blocked (http {res["status"]}), attempt {attempt + 1} of {attempts}')
+        snippet = ' '.join(res['text'].split())[:100]
+        print(f'{month}: request blocked (http {res["status"]}, cf-mitigated={res.get("cf")}), attempt {attempt + 1} of {attempts}: {snippet}')
         if attempt < len(waits):
             time.sleep(waits[attempt])
 
@@ -80,6 +81,8 @@ else:
 driver.set_script_timeout(60)
 
 months_with_events = 0
+months_requested = 0
+empty_streak = 0
 
 for i in range(months_ahead):
 
@@ -87,18 +90,29 @@ for i in range(months_ahead):
     year = current_year + month_index // 12
     month = str(month_index % 12 + 1).zfill(2)
 
-    # wait 1-5 seconds
-    time.sleep(random.randint(1, 5))
+    # pace the requests: bursts draw Cloudflare refusals
+    time.sleep(random.randint(5, 10))
 
     events_month = get_events(f'{year}-{month}', driver)
+    months_requested += 1
 
     # months without events are normal (the house is closed over the summer)
     if len(events_month) > 0:
         months_with_events += 1
+        empty_streak = 0
+    else:
+        empty_streak += 1
 
     event_days.extend(events_month)
 
-print(f'{months_with_events} of {months_ahead} months returned events')
+    # seasons run September to July with only August empty, so two empty
+    # months after the season started mean the next season is not published
+    # yet; stop rather than draw refusals on months that are empty anyway
+    if months_with_events > 0 and empty_streak >= 2:
+        print(f'stopping after {empty_streak} empty months at {year}-{month}')
+        break
+
+print(f'{months_with_events} of {months_requested} months returned events')
 
 # close driver
 driver.quit()
