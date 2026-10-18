@@ -41,15 +41,17 @@ def get_events(month, driver):
 
     url = f'{spielplan_url}/{month}/activities.ajax'
 
-    # Cloudflare rejects individual requests with a 403 now and then; a retry a
-    # few seconds later usually passes
-    attempts = 4
+    # Cloudflare rejects individual requests with a 403 now and then, sometimes
+    # in streaks of a minute or so; wait longer after each refusal
+    waits = [5, 10, 20, 40, 60]
+    attempts = len(waits) + 1
     for attempt in range(attempts):
         res = driver.execute_async_script(fetch_js, url)
         if res['status'] == 200 and 'Just a moment' not in res['text']:
             return utils.make_soup(res['text']).find_all(class_ = 'activity-group')
         print(f'{month}: request blocked (http {res["status"]}), attempt {attempt + 1} of {attempts}')
-        time.sleep(5)
+        if attempt < len(waits):
+            time.sleep(waits[attempt])
 
     # a blocked month would leave a hole in the published schedule, so fail
     # and let the build restore the last complete scrape instead
@@ -59,13 +61,18 @@ event_days = []
 
 driver = utils.get_selenium_driver()
 
-# load the schedule page once, so the ajax endpoint is requested in session
-shell_html = utils.get_html_selenium(spielplan_url, driver)
-
-# a page without the schedule means the Cloudflare challenge did not clear;
-# it will not clear for the month requests either, so fail now instead of
-# timing out on each of them
-if 'activity-group' not in shell_html:
+# load the schedule page once, so the ajax endpoint is requested in session.
+# A page without the schedule means the Cloudflare challenge did not clear; a
+# fresh load often passes where the first was refused, so try a few times,
+# then fail instead of timing out on every month request
+shell_attempts = 3
+for attempt in range(shell_attempts):
+    shell_html = utils.get_html_selenium(spielplan_url, driver)
+    if 'activity-group' in shell_html:
+        break
+    print(f'schedule page did not render (title {driver.title!r}), attempt {attempt + 1} of {shell_attempts}')
+    time.sleep(10)
+else:
     title = driver.title
     driver.quit()
     raise Exception(f'Schedule page did not render (title {title!r}), staatsoper likely blocked the scraper')
