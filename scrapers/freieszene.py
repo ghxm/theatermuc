@@ -17,8 +17,16 @@ base_url = 'https://www.freieszenemuc.de'
 def get_events(date):
 
     import utils
+    import requests
 
-    program_ics = utils.get_html(f'https://www.freieszenemuc.de/?post_type=tribe_events&tribe-bar-date={date}&ical=1&eventDisplay=list')
+    try:
+        program_ics = utils.get_html(f'https://www.freieszenemuc.de/?post_type=tribe_events&tribe-bar-date={date}&ical=1&eventDisplay=list')
+    except requests.HTTPError as e:
+        # the calendar answers 404 for a date with no upcoming events, which
+        # is the normal end of the schedule, not an error
+        if e.response is not None and e.response.status_code == 404:
+            return []
+        raise
 
     cals = utils.parse_ics(program_ics)
 
